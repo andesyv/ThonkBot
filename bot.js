@@ -25,8 +25,7 @@ var bot = new Discord.Client({
 });
 bot.on('ready', function (evt) {
     logger.log('info','Connected');
-    logger.log('info','Logged in as: ');
-    logger.log('info', bot.username + ' - (' + bot.id + ')');
+    logger.log('info','Logged in as: ' + bot.username + ' - (' + bot.id + ')');
 });
 bot.on('message', function (user, userID, channelID, message, evt) {
     // Our bot needs to know if it will execute a command
@@ -59,11 +58,13 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'randomthink':
                 var readDir = './ThonkEmojis/';
                 fs.readdir(readDir, (err, files) => {
-                    var randomFile = files[Math.floor(Math.random() * files.length)];
-                    bot.uploadFile({
-                        to: channelID,
-                        file: './ThonkEmojis/' + randomFile
-                    });
+                    if (files.constructor === Array) {
+                        var randomFile = files[Math.floor(Math.random() * files.length)];
+                        bot.uploadFile({
+                            to: channelID,
+                            file: readDir + randomFile
+                        });
+                    }
                 });
                 break;
 
