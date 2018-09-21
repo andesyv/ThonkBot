@@ -1,5 +1,5 @@
-var Discord = require('discord.io');
-var winston = require('winston');
+var Discord = require('./lib/discord.io');
+var winston = require('./lib/winston');
 var auth = require('./auth.json');
 var fs = require('fs');
 
