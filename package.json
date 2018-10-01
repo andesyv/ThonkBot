@@ -1,6 +1,6 @@
 {
   "name": "ThonkBot",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "A thonk discord bot",
   "main": "bot.js",
   "author": "andesyv",

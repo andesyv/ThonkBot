@@ -81,7 +81,7 @@ bot.on('disconnect', function (errMsg, code) {
 // Credits to synicalsyntax
 
 // Web app (Express + EJS)
-const http = require('http');
+const https = require('https');
 const express = require('express');
 const app = express();
 
@@ -108,5 +108,5 @@ app.listen(port, () => {
 
 // pings server every 15 minutes to prevent dynos from sleeping (cheeky)
 setInterval(() => {
- http.get('https://thonk-bot.herokuapp.com');
+ https.get('https://thonk-bot.herokuapp.com');
 }, 900000);
