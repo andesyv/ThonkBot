@@ -56,14 +56,25 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'randomThink':
             case 'randomthonk':
             case 'randomthink':
-                var readDir = './ThonkEmojis/';
+                uploadRandomFile('./ThonkEmojis/');
+                break;
+            case 'spook':
+            case 'Spook':
+                uploadRandomFile('./Spooks/');
+                break;
+            case 'ManySpooks':
+            case 'manyspooks':
+            case 'Manyspooks':
+            case 'manySpooks':
+                var readDir = './Spooks/';
                 fs.readdir(readDir, (err, files) => {
                     if (files.constructor === Array) {
-                        var randomFile = files[Math.floor(Math.random() * files.length)];
-                        bot.uploadFile({
-                            to: channelID,
-                            file: readDir + randomFile
-                        });
+                        for each (file in files) {
+                            bot.uploadFile({
+                                to: channelID,
+                                file: readDir + file
+                            });
+                        }
                     }
                 });
                 break;
@@ -73,6 +84,20 @@ bot.on('message', function (user, userID, channelID, message, evt) {
          }
      }
 });
+
+function uploadRandomFile(folder) {
+    var readDir = folder;
+    fs.readdir(readDir, (err, files) => {
+        if (files.constructor === Array) {
+            var randomFile = files[Math.floor(Math.random() * files.length)];
+            bot.uploadFile({
+                to: channelID,
+                file: readDir + randomFile
+            });
+        }
+    });
+}
+
 bot.on('disconnect', function (errMsg, code) {
     logger.log('info', 'Disconnected with error message: ' + errMsg);
 });
