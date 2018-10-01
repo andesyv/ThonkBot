@@ -69,7 +69,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 var readDir = './Spooks/';
                 fs.readdir(readDir, (err, files) => {
                     if (files.constructor === Array) {
-                        for each (file in files) {
+                        for each (var file in files) {
                             bot.uploadFile({
                                 to: channelID,
                                 file: readDir + file
