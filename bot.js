@@ -56,11 +56,11 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'randomThink':
             case 'randomthonk':
             case 'randomthink':
-                uploadRandomFile('./ThonkEmojis/');
+                uploadRandomFile('./ThonkEmojis/', channelID);
                 break;
             case 'spook':
             case 'Spook':
-                uploadRandomFile('./Spooks/');
+                uploadRandomFile('./Spooks/', channelID);
                 break;
             case 'ManySpooks':
             case 'manyspooks':
@@ -85,7 +85,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
      }
 });
 
-function uploadRandomFile(folder) {
+function uploadRandomFile(folder, channelID) {
     var readDir = folder;
     fs.readdir(readDir, (err, files) => {
         if (files.constructor === Array) {
