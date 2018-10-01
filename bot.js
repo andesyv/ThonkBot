@@ -69,12 +69,12 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 var readDir = './Spooks/';
                 fs.readdir(readDir, (err, files) => {
                     if (files.constructor === Array) {
-                        for each (var file in files) {
+                        files.forEach(function(element) {
                             bot.uploadFile({
                                 to: channelID,
-                                file: readDir + file
+                                file: readDir + element
                             });
-                        }
+                        });
                     }
                 });
                 break;
