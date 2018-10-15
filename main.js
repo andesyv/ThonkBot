@@ -21,7 +21,7 @@ const logger = winston.createLogger({
 });
 // Initialize Discord Bot
 const bot = new Discord.Client({
-   token: "auth.token"
+   token: auth.token
 });
 
 bot.on('ready', function (evt) {
@@ -37,7 +37,7 @@ bot.on('message', function (message) {
 bot.on('disconnect', (event) => logger.log('info', 'Disconnected with close event: ' + event));
 
 // Connect bot
-bot.login('auth.token');
+bot.login(auth.token);
 
 // Testcode taken from: https://github.com/synicalsyntax/discord.js-heroku/blob/web/index.js
 // Credits to synicalsyntax
