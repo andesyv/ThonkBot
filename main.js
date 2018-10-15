@@ -1,4 +1,4 @@
-var Discord = require('discord.io');
+var Discord = require('discord.js');
 var winston = require('winston');
 var commands = require('./commands.js');
 var auth = require('./auth.json');
@@ -20,31 +20,24 @@ const logger = winston.createLogger({
   ]
 });
 // Initialize Discord Bot
-var bot = new Discord.Client({
-   token: "auth.token",
-   autorun: true
+const bot = new Discord.Client({
+   token: "auth.token"
 });
 
 bot.on('ready', function (evt) {
     logger.log('info','Connected');
-    logger.log('info','Logged in as: ' + bot.username + ' - (' + bot.id + ')');
+    logger.log('info','Logged in as: ' + bot.user.tag + ' - (' + bot.user.id + ')');
 });
 
-bot.on('message', function (user, userID, channelID, message, evt) {
-    // Bot will listen for messages that will start with `!`
-    if (message.substring(0, 1) == '!') {
-        var args = message.substring(1).split(' ');
-        var cmd = args[0];
-
-        args = args.splice(1);
-
-        commands.runCommand(bot, cmd, args, user, userID, channelID, evt); // Run the command.
-     }
+bot.on('message', function (message) {
+    commands.runCommand(bot, message, logger); // Run the command.
 });
 
-bot.on('disconnect', function (errMsg, code) {
-    logger.log('info', 'Disconnected with error message: ' + errMsg);
-});
+// In case of disconnect:
+bot.on('disconnect', (event) => logger.log('info', 'Disconnected with close event: ' + event));
+
+// Connect bot
+bot.login('auth.token');
 
 // Testcode taken from: https://github.com/synicalsyntax/discord.js-heroku/blob/web/index.js
 // Credits to synicalsyntax
