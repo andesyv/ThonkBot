@@ -43,7 +43,10 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'MANYSPOOKS':
             sendManySpooks(message);
             break;
-
+        case 'CAT':
+        case 'CATS':
+            sendRandomFile(message, './Cats/', logger);
+            break;
         default:
             break;
      }
