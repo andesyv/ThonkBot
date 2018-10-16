@@ -9,4 +9,6 @@ A simple discord bot for thonking.
 !think
 !thonk
 !randomThonk
+!cat
+!knockknock
 ```
