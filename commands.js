@@ -1,5 +1,6 @@
 var Discord = require('discord.js');
 var fs = require('fs');
+const jokes = require('./jokes.json');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -46,6 +47,10 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'CAT':
         case 'CATS':
             sendRandomFile(message, './Cats/', logger);
+            break;
+        case 'KNOCK':
+        case 'KNOCKKNOCK':
+            message.channel.send(jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]);
             break;
         default:
             break;
