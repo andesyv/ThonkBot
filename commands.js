@@ -55,6 +55,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'PEPPERKAKE':
             var member = message.mentions.users[0];
             member.send('Du må gi en pepperkake');
+            break;
         default:
             break;
      }
