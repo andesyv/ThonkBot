@@ -53,8 +53,9 @@ function parseCommand(bot, cmd, args, message, logger) {
             message.channel.send(jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]);
             break;
         case 'PEPPERKAKE':
-            var member = message.mentions.users[0];
-            member.send('Du må gi en pepperkake');
+            var anotherMember = message.mentions.members.first();
+            message.anotherMember.send('Du må gi en pepperkake');
+            break;
         default:
             break;
      }
