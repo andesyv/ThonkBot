@@ -53,16 +53,23 @@ function parseCommand(bot, cmd, args, message, logger) {
             message.channel.send(jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]);
             break;
         case 'PEPPERKAKE':
-            let mentioned = message.mentions.users.first();
-            let newDMChannel = mentioned.createDM();
-            newDMChannel.then((value) => {
-                newDMChannel.send('Du må gi en pepperkake til ' + message.author.avatarURL);
-            });
-            // message.mentioned.send('Du må gi en pepperkake');
+            if (message.channel instanceof Discord.TextChannel) {
+                sendPepperkake(message, logger);
+            }
             break;
         default:
             break;
      }
+}
+
+function sendPepperkake (message, logger) {
+    let mentioned = message.mentions.users.first();
+    let newDMChannel = mentioned.createDM();
+    newDMChannel.then((value) => {
+        value.send('Du må gi en pepperkake til ' + message.author.tag);
+    }).catch(() => {
+        logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
+    });
 }
 
 function sendManySpooks (message) {
