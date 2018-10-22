@@ -39,13 +39,16 @@ function parseCommand(bot, cmd, args, message, logger) {
             sendRandomFile(message, './ThonkEmojis/', logger);
             break;
         case 'SPOOK':
+        case 'RANDOMSPOOK':
             sendRandomFile(message, './Spooks/', logger);
             break;
         case 'MANYSPOOKS':
+        case 'ALLSPOOKS':
             sendManySpooks(message);
             break;
         case 'CAT':
         case 'CATS':
+        case 'RANDOMCAT':
             sendRandomFile(message, './Cats/', logger);
             break;
         case 'KNOCK':
@@ -64,6 +67,12 @@ function parseCommand(bot, cmd, args, message, logger) {
 
 function sendPepperkake (message, logger) {
     let mentioned = message.mentions.users.first();
+    // Check for crash
+    if (mentioned == null) {
+        message.channel.send('Nei!');
+        return;
+    }
+
     let newDMChannel = mentioned.createDM();
     newDMChannel.then((value) => {
         value.send('Du må gi en pepperkake til ' + message.author.tag);
