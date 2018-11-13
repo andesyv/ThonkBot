@@ -38,6 +38,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'RANDOMTHINK':
             sendRandomFile(message, './ThonkEmojis/', logger);
             break;
+        /* Spooktober is over. :/
         case 'SPOOK':
         case 'RANDOMSPOOK':
             sendRandomFile(message, './Spooks/', logger);
@@ -46,6 +47,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'ALLSPOOKS':
             sendManySpooks(message);
             break;
+        */
         case 'CAT':
         case 'CATS':
         case 'RANDOMCAT':
@@ -60,9 +62,58 @@ function parseCommand(bot, cmd, args, message, logger) {
                 sendPepperkake(message, logger);
             }
             break;
+        case 'SECRETSANTA':
+            if (message.channel instanceof Discord.TextChannel) {
+                secretSanta(message, logger);
+            }
+            break;
         default:
             break;
      }
+}
+
+function secretSanta (message, logger) {
+    let participants = message.mentions.users;
+
+    // Check for crash
+    if (participants == null || participants.length < 1) {
+        message.channel.send('You have to specify users who is participating in the secret santa by "mentioning" them. ( !secretSanta @firstPerson @secondPerson )');
+        return;
+    } else if (participants.length == 1) {
+        message.channel.send("You can't have a secret santa with yourself. Mention more users.");
+        return;
+    }
+
+    // Copy participants array into receivers and shuffle it.
+    let receivers = shuffle(participants);
+    // Shuffle as long as there are elements that are the same in the arrays.
+    while (hasSharedElement(participants, receivers)) {
+        receivers = shuffle(receivers);
+    }
+
+    // Send a message to each participant with their corresponding receiver.
+    for (let i = 0; i < participants.length; i++) {
+        let newDMChannel = participants[i].createDM();
+        newDMChannel.then((value) => {
+            value.send("Your secret santa is: " + receivers[i].tag);
+        }).catch(() => {
+            logger.log('error', `Failed to create dm channel with user ${participants[i].tag} on textChannel ${message.channel.name}`);
+        });
+    }
+}
+
+// Checks if for every index i in array there are any a[i] === b[i]
+function hasSharedElement(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+        for (let i = 0; i < a.length && i < b.length; i++) {
+            if (a[i] === b[i]) {
+                return true;
+            }
+        }
+        return false;
+    } else {
+        return a === b;
+    }
 }
 
 function sendPepperkake (message, logger) {
@@ -120,23 +171,15 @@ function getRandomFile(folder) {
     }
 }
 
-// Fisher-Yates (aka Knuth) Shuffle
-// See: https://bost.ocks.org/mike/shuffle/
-function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex;
-
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
-
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-}
+ /** Shuffles array in place.
+  * Modern version of Fisher-Yates (aka Knuth) Shuffle. ES6 version
+  * @param {Array} a items An array containing the items.
+  * @see https://bost.ocks.org/mike/shuffle/ and https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
+  */
+ function shuffle(a) {
+     for (let i = a.length - 1; i > 0; i--) {
+         const j = Math.floor(Math.random() * (i + 1));
+         [a[i], a[j]] = [a[j], a[i]];
+     }
+     return a;
+ }
