@@ -73,19 +73,24 @@ function parseCommand(bot, cmd, args, message, logger) {
 }
 
 function secretSanta (message, logger) {
-    let participants = message.mentions.users;
+    let participants = Array.from(message.mentions.users.values());
 
     // Check for crash
-    if (participants == null || participants.length < 1) {
+    if (participants == null || !Array.isArray(participants) || participants.length < 1) {
         message.channel.send('You have to specify users who is participating in the secret santa by "mentioning" them. ( !secretSanta @firstPerson @secondPerson )');
         return;
     } else if (participants.length == 1) {
         message.channel.send("You can't have a secret santa with yourself. Mention more users.");
         return;
+    } else if (isAnyUserBots(participants)) {
+        message.channel.send("Bots can't participate in a secret santa. Mention users only.");
+        return;
     }
 
     // Copy participants array into receivers and shuffle it.
-    let receivers = shuffle(participants);
+    let receivers = participants.slice();
+    receivers = shuffle(receivers);
+
     // Shuffle as long as there are elements that are the same in the arrays.
     while (hasSharedElement(participants, receivers)) {
         receivers = shuffle(receivers);
@@ -100,6 +105,17 @@ function secretSanta (message, logger) {
             logger.log('error', `Failed to create dm channel with user ${participants[i].tag} on textChannel ${message.channel.name}`);
         });
     }
+}
+
+function isAnyUserBots(a) {
+    if (Array.isArray(a)) {
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] instanceof Discord.User && a[i].bot) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 // Checks if for every index i in array there are any a[i] === b[i]
