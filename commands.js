@@ -1,6 +1,7 @@
 var Discord = require('discord.js');
 var fs = require('fs');
 const jokes = require('./jokes.json');
+const christmasThonk = require('./lib/thonkbot-christmas');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -38,6 +39,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'RANDOMTHINK':
             sendRandomFile(message, './ThonkEmojis/', logger);
             break;
+        /* Spooktober is over. :/
         case 'SPOOK':
         case 'RANDOMSPOOK':
             sendRandomFile(message, './Spooks/', logger);
@@ -46,6 +48,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'ALLSPOOKS':
             sendManySpooks(message);
             break;
+        */
         case 'CAT':
         case 'CATS':
         case 'RANDOMCAT':
@@ -57,28 +60,17 @@ function parseCommand(bot, cmd, args, message, logger) {
             break;
         case 'PEPPERKAKE':
             if (message.channel instanceof Discord.TextChannel) {
-                sendPepperkake(message, logger);
+                christmasThonk.sendPepperkake(message, logger);
+            }
+            break;
+        case 'SECRETSANTA':
+            if (message.channel instanceof Discord.TextChannel) {
+                christmasThonk.secretSanta(message, logger);
             }
             break;
         default:
             break;
      }
-}
-
-function sendPepperkake (message, logger) {
-    let mentioned = message.mentions.users.first();
-    // Check for crash
-    if (mentioned == null) {
-        message.channel.send('Nei!');
-        return;
-    }
-
-    let newDMChannel = mentioned.createDM();
-    newDMChannel.then((value) => {
-        value.send('Du må gi en pepperkake til ' + message.author.tag);
-    }).catch(() => {
-        logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
-    });
 }
 
 function sendManySpooks (message) {
@@ -120,23 +112,15 @@ function getRandomFile(folder) {
     }
 }
 
-// Fisher-Yates (aka Knuth) Shuffle
-// See: https://bost.ocks.org/mike/shuffle/
-function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex;
-
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
-
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-}
+ /** Shuffles array in place.
+  * Modern version of Fisher-Yates (aka Knuth) Shuffle. ES6 version
+  * @param {Array} a items An array containing the items.
+  * @see https://bost.ocks.org/mike/shuffle/ and https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
+  */
+ function shuffle(a) {
+     for (let i = a.length - 1; i > 0; i--) {
+         const j = Math.floor(Math.random() * (i + 1));
+         [a[i], a[j]] = [a[j], a[i]];
+     }
+     return a;
+ }
