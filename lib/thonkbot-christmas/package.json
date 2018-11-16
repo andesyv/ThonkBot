@@ -1,0 +1,10 @@
+{
+    "name": "ThonkBot Christmas",
+    "version": "1.0.0",
+    "description": "A christmas module for ThonkBot",
+    "main": "christmas.js",
+    "author": "andesyv",
+    "engines": {
+        "node": "8.x"
+    }
+}
