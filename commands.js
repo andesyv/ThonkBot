@@ -1,6 +1,6 @@
 var Discord = require('discord.js');
 const fs = require('fs');
-var git = require('git-last-commit');
+var github = require('octonode');
 const jokes = require('./jokes.json');
 const christmasThonk = require('./lib/thonkbot-christmas');
 
@@ -68,9 +68,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'PATCHNOTES':
         case 'NOTES':
         case 'NEW':
-            git.getLastCommit((err, commit) => {
-                message.channel.send('Last commit:\n"' + commit.subject + '\n' + commit.body + '"\nAuthor: ' + commit.author.email);
-            });
+            getLastCommit(message, logger, args);
             break;
         case 'REQUEST':
             fs.appendFile('requests.txt', message.content.slice(cmd.length + 2) + '\n', (err) => {
@@ -97,6 +95,31 @@ function parseCommand(bot, cmd, args, message, logger) {
         default:
             break;
      }
+}
+
+function getLastCommit (message, logger, args) {
+    var client = github.client();
+
+    var ghrepo = client.repo('andesyv/ThonkBot');
+
+    ghrepo.commits((err, data, headers) => {
+        var msg = '';
+        if (0 < args.length && !isNaN(args[0])) {
+            let amount = Number(args[0]);
+            msg += `Last ${Number(args)} commits:\n`;
+            for (let i = 0; i < amount && i < data.length; i++) {
+                msg += data[i].commit.message + '\nBy: ' + data[i].commit.author.name + '\nDate: ' + data[i].commit.author.date + '\nUrl: ' + data[i].html_url;
+                if (i !== amount.length - 1 || i !== data.length - 1) {
+                    msg += '\n\n';
+                }
+            }
+            message.channel.send(msg);
+        } else if (0 < data.length) {
+            message.channel.send('Last commit:\n' + data[0].commit.message + '\nBy: ' + data[0].commit.author.name + '\nDate: ' + data[0].commit.author.date + '\nUrl: ' + data[0].html_url);
+        } else {
+            message.channel.send("Couldn't receive any commits.");
+        }
+    });
 }
 
 function removeRequest (message, logger) {

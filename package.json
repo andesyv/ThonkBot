@@ -1,8 +1,9 @@
 {
   "name": "ThonkBot",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A thonk discord bot",
   "main": "main.js",
+  "repository": "andesyv/ThonkBot",
   "author": "andesyv",
   "engines": {
     "node": "8.x",
@@ -17,7 +18,7 @@
     "discord.js": "^11.4.2",
     "ejs": "^2.5.6",
     "express": "^4.16.4",
-    "git-last-commit": "git+https://github.com/seymen/git-last-commit.git",
+    "octonode": "^0.9.5",
     "winston": "^3.1.0"
   }
 }
