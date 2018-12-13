@@ -1,5 +1,6 @@
 var Discord = require('discord.js');
-var fs = require('fs');
+const fs = require('fs');
+var git = require('git-last-commit');
 const jokes = require('./jokes.json');
 const christmasThonk = require('./lib/thonkbot-christmas');
 
@@ -14,7 +15,7 @@ exports.runCommand = function (bot, message, logger) {
         var args = message.content.substring(1).split(' ');
         var cmd = args[0];
 
-        args = args.splice(1);
+        args = args.slice(1);
 
         parseCommand(bot, cmd, args, message, logger)
     }
@@ -63,6 +64,31 @@ function parseCommand(bot, cmd, args, message, logger) {
                 christmasThonk.sendPepperkake(message, logger);
             }
             break;
+        case 'PATCH':
+        case 'PATCHNOTES':
+        case 'NOTES':
+        case 'NEW':
+            git.getLastCommit((err, commit) => {
+                message.channel.send('Last commit:\n"' + commit.subject + '\n' + commit.body + '"\nAuthor: ' + commit.author.email);
+            });
+            break;
+        case 'REQUEST':
+            fs.appendFile('requests.txt', message.content.slice(cmd.length + 2) + '\n', (err) => {
+                if (err) {
+                    throw err;
+                }
+                message.channel.send('Request was accepted.');
+            });
+            break;
+        case 'REQUESTS':
+        case 'TODO':
+            getRequests(message, logger);
+            break;
+        case 'COMPLETEREQUEST':
+        case 'DELETEREQUEST':
+        case 'REMOVEREQUEST':
+            removeRequest(message, logger);
+            break;
         case 'SECRETSANTA':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.secretSanta(message, logger);
@@ -71,6 +97,57 @@ function parseCommand(bot, cmd, args, message, logger) {
         default:
             break;
      }
+}
+
+function removeRequest (message, logger) {
+    fs.readFile('requests.txt', 'utf8', (err, data) => {
+        if (err) {
+            message.channel.send('There are no requests.');
+            logger.log('info', "Didn't remove file because: " + err.message);
+            return;
+        }
+        var contents = data.split('\n');
+        var newContents = '';
+        for (let i = 0; i < contents.length - 2; i++) {
+            // if (i == contents.length - 2) continue; // Skip if it's the last line.
+            newContents += contents[i] + '\n';
+        }
+        if (newContents === '') {
+            fs.unlink('requests.txt', (err) => {
+                if (err) throw err;
+                logger.log('info', 'Removed requests.txt because it was empty.');
+                message.channel.send('Done!');
+            });
+        } else {
+            fs.writeFile('requests.txt', newContents, 'utf8', (err) => {
+                if (err) throw err;
+                // Writing successful.
+                message.channel.send('Done!');
+            });
+        }
+    });
+}
+
+function getRequests (message, logger) {
+    fs.readFile('requests.txt', 'utf8', (err, data) => {
+        if (err) {
+            message.channel.send('There are no requests at the moment.');
+            logger.log('info', "Didn't read file because: " + err.message);
+            return;
+        }
+
+        var requests = data.split('\n');
+        var m = 'Requests:\n';
+        for (let i = 0; i < requests.length; i++) { // - 1 because there's always one \n at the very end.
+            if (requests[i].length < 1) {
+                continue;
+            } else {
+                m += (i + 1) + '. ' + requests[i] + '\n';
+            }
+        }
+
+        message.channel.send(m);
+    });
 }
 
 function sendManySpooks (message) {
