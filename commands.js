@@ -50,6 +50,12 @@ function parseCommand(bot, cmd, args, message, logger) {
             sendManySpooks(message);
             break;
         */
+        case 'CHRISTMASNAME':
+        case 'CHRISTMAS-NAME':
+            if (message.channel instanceof Discord.TextChannel) {
+                christmasThonk.christmasName(message, logger);
+            }
+            break;
         case 'CAT':
         case 'CATS':
         case 'RANDOMCAT':
