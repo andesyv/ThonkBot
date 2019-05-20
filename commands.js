@@ -2,7 +2,7 @@ var Discord = require('discord.js');
 const fs = require('fs');
 var github = require('octonode');
 const jokes = require('./jokes.json');
-const christmasThonk = require('./lib/thonkbot-christmas');
+// const christmasThonk = require('./lib/thonkbot-christmas');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -50,26 +50,36 @@ function parseCommand(bot, cmd, args, message, logger) {
             sendManySpooks(message);
             break;
         */
+        /* Christmas is over
         case 'CHRISTMASNAME':
         case 'CHRISTMAS-NAME':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.christmasName(message, logger);
             }
             break;
+        */
         case 'CAT':
         case 'CATS':
         case 'RANDOMCAT':
             sendRandomFile(message, './Cats/', logger);
             break;
+        case 'COLA':
+        case 'COKE':
+        case 'COCACOLA':
+        case 'PEPSI':
+            sendRandomFile(message, './Coke/', logger);
+            break;
         case 'KNOCK':
         case 'KNOCKKNOCK':
             message.channel.send(jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]);
             break;
+        /* Christmas is over
         case 'PEPPERKAKE':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.sendPepperkake(message, logger);
             }
             break;
+        */
         case 'PATCH':
         case 'PATCHNOTES':
         case 'NOTES':
@@ -93,11 +103,13 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'REMOVEREQUEST':
             removeRequest(message, logger);
             break;
+        /* Christmas is over
         case 'SECRETSANTA':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.secretSanta(message, logger);
             }
             break;
+        */
         default:
             break;
      }
