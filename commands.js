@@ -40,7 +40,6 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'RANDOMTHINK':
             sendRandomFile(message, './ThonkEmojis/', logger);
             break;
-        /* Spooktober is over. :/
         case 'SPOOK':
         case 'RANDOMSPOOK':
             sendRandomFile(message, './Spooks/', logger);
@@ -49,7 +48,6 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'ALLSPOOKS':
             sendManySpooks(message);
             break;
-        */
         /* Christmas is over
         case 'CHRISTMASNAME':
         case 'CHRISTMAS-NAME':
