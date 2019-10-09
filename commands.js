@@ -42,7 +42,10 @@ function parseCommand(bot, cmd, args, message, logger) {
             break;
         case 'SPOOK':
         case 'RANDOMSPOOK':
-            sendRandomFile(message, './Spooks/', logger);
+            if (message.mentions.users.size > 0)
+                sendPersonalSpook(message, './Spooks/', logger);
+            else
+                sendRandomFile(message, './Spooks/', logger);
             break;
         case 'MANYSPOOKS':
         case 'ALLSPOOKS':
@@ -101,6 +104,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'REMOVEREQUEST':
             removeRequest(message, logger);
             break;
+
         /* Christmas is over
         case 'SECRETSANTA':
             if (message.channel instanceof Discord.TextChannel) {
@@ -239,4 +243,26 @@ function getRandomFile(folder) {
          [a[i], a[j]] = [a[j], a[i]];
      }
      return a;
+ }
+
+ function sendPersonalSpook(message, folder, logger) {
+     let mentioned = message.mentions.users.first();
+     // Check for crash
+     if (mentioned == null) {
+         message.channel.send('Nei!');
+         return;
+     }
+
+     let newDMChannel = mentioned.createDM();
+     newDMChannel.then((value) => {
+         let file = getRandomFile(folder);
+         if (typeof file == "string") {
+             value.send(`You've been spooked by ${message.author.tag}!`,
+             new Discord.Attachment(folder + file));
+         } else {
+             logger.log('error', 'Cannot find random file in ' + folder);
+         }
+     }).catch(() => {
+         logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
+     });
  }
