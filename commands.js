@@ -70,7 +70,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'PEPSI':
             sendRandomFile(message, './Coke/', logger);
             break;
-        case 'GHIBLI':
+        case 'NEZUKO':
         case 'ANIME':
         case 'WEEB':
         case 'WHOLESOME':
