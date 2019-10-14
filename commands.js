@@ -70,6 +70,12 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'PEPSI':
             sendRandomFile(message, './Coke/', logger);
             break;
+        case 'GHIBLI':
+        case 'ANIME':
+        case 'WEEB':
+        case 'WHOLESOME':
+            sendRandomFile(message, './Anime/', logger);
+            break;
         case 'KNOCK':
         case 'KNOCKKNOCK':
             message.channel.send(jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]);
