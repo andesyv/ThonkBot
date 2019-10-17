@@ -96,6 +96,7 @@ function parseCommand(bot, cmd, args, message, logger) {
             }
             break;
         */
+        /*
         case 'CHRISTMAS':
         case 'JUL':
         if (message.mentions.users.size > 0)
@@ -103,14 +104,18 @@ function parseCommand(bot, cmd, args, message, logger) {
         else
               message.channel.send(christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]);
 
-        break;
+        break;*/
 
         case 'COMPLIMENTS':
+        case 'COMPLIMENT':
+        case 'COMP':
+        case 'Kompliment':
+
         if (message.mentions.users.size > 0)
             sendPersonalCompliment(message, logger);
         else
               message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
-        
+
         break;
 
         case 'PATCH':
