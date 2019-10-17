@@ -219,7 +219,7 @@ function sendManySpooks (message, logger) {
         files.forEach((file) => {
             let fileSize = fs.statSync(readDir + file).size;
 
-            if (messageSize + fileSize < 8 * 1024 * 1024 && files.length < 10)
+            if (messageSize + fileSize < 8 * 1024 * 1024 && spookList.length < 10)
             {
                 spookList.push({
                     attachment: readDir + file,
