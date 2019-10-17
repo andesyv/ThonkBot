@@ -49,7 +49,7 @@ function parseCommand(bot, cmd, args, message, logger) {
             break;
         case 'MANYSPOOKS':
         case 'ALLSPOOKS':
-            sendManySpooks(message);
+            sendManySpooks(message, logger);
             break;
         /* Christmas is over
         case 'CHRISTMASNAME':
@@ -206,7 +206,7 @@ function getRequests (message, logger) {
     });
 }
 
-function sendManySpooks (message) {
+function sendManySpooks (message, logger) {
     let readDir = './Spooks/';
     let spookList = [];
     let files = fs.readdirSync(readDir);
@@ -215,17 +215,28 @@ function sendManySpooks (message) {
         // Shuffle Array
         files = shuffle(files);
 
-        files.forEach(
-            (element) => spookList.push({
-                attachment: readDir + element,
-                name: element
-            })
-        );
+        var messageSize = 0;
+        files.forEach((file) => {
+            let fileSize = fs.statSync(readDir + file).size;
+
+            if (messageSize + fileSize < 8 * 1024 * 1024 && files.length < 10)
+            {
+                spookList.push({
+                    attachment: readDir + file,
+                    name: file
+                });
+
+                messageSize += fileSize;
+            }
+        });
     }
 
-    message.channel.send({
-        files: spookList
-    });
+    if (0 < spookList.length)
+    {
+        message.channel.send({
+            files: spookList
+        });
+    }
 }
 
 function sendRandomFile(message, folder, logger) {
