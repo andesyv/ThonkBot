@@ -2,6 +2,8 @@ var Discord = require('discord.js');
 const fs = require('fs');
 var github = require('octonode');
 const jokes = require('./jokes.json');
+const compliments = require('./compliments.json');
+const christmas = require('./christmas.json');
 // const christmasThonk = require('./lib/thonkbot-christmas');
 
 // Converts the message to a command and runs it.
@@ -94,6 +96,23 @@ function parseCommand(bot, cmd, args, message, logger) {
             }
             break;
         */
+        case 'CHRISTMAS':
+        case 'JUL':
+        if (message.mentions.users.size > 0)
+            sendPersonalChristmasGreeting(message, logger);
+        else
+              message.channel.send(christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]);
+
+        break;
+
+        case 'COMPLIMENTS':
+        if (message.mentions.users.size > 0)
+            sendPersonalCompliment(message, logger);
+        else
+              message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
+        
+        break;
+
         case 'PATCH':
         case 'PATCHNOTES':
         case 'NOTES':
@@ -279,3 +298,40 @@ function getRandomFile(folder) {
          logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
      });
  }
+
+ function sendPersonalChristmasGreeting(message, logger){
+   let mentioned = message.mentions.users.first();
+   // Check for crash
+   if (mentioned == null) {
+       message.channel.send('Nei!');
+       return;
+     }
+     let newDMChannel = mentioned.createDM();
+     newDMChannel.then((value) => {
+         if (typeof file == "string") {
+             value.send(`${christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]} Best Regards ${message.author.tag}!` )
+         } else {
+             logger.log('error', 'Cannot find random christmas greeting!');
+         }
+     }).catch(() => {
+         logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
+     });
+}
+function sendPersonalCompliment(message, logger){
+  let mentioned = message.mentions.users.first();
+  // Check for crash
+  if (mentioned == null) {
+      message.channel.send('Nei!');
+      return;
+    }
+    let newDMChannel = mentioned.createDM();
+    newDMChannel.then((value) => {
+        if (typeof file == "string") {
+            value.send(`${compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]} Best Regards ${message.author.tag}!` )
+        } else {
+            logger.log('error', 'Cannot find random christmas greeting!');
+        }
+    }).catch(() => {
+        logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
+    });
+}
