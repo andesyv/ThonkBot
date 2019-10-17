@@ -313,11 +313,8 @@ function getRandomFile(folder) {
      }
      let newDMChannel = mentioned.createDM();
      newDMChannel.then((value) => {
-         if (typeof file == "string") {
-             value.send(`${christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]} Best Regards ${message.author.tag}!` )
-         } else {
-             logger.log('error', 'Cannot find random christmas greeting!');
-         }
+         value.send(`${christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]} Best Regards ${message.author.tag}!` )
+
      }).catch(() => {
          logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
      });
@@ -331,11 +328,7 @@ function sendPersonalCompliment(message, logger){
     }
     let newDMChannel = mentioned.createDM();
     newDMChannel.then((value) => {
-        if (typeof file == "string") {
-            value.send(`${compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]} Best Regards ${message.author.tag}!` )
-        } else {
-            logger.log('error', 'Cannot find random christmas greeting!');
-        }
+        value.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
     }).catch(() => {
         logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
     });
