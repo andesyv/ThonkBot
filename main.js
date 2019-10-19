@@ -1,7 +1,7 @@
 var Discord = require('discord.js');
 var winston = require('winston');
 var commands = require('./commands.js');
-var auth = require('./auth.json');
+// var auth = require('./auth.json');
 
 
 // Initialize logger
@@ -21,7 +21,7 @@ const logger = winston.createLogger({
 });
 // Initialize Discord Bot
 const bot = new Discord.Client({
-   token: auth.token
+   token: 'NTAxMzQ4ODc5MDE1MzQ2MTc3.Xagzgw.bOlojzL1YD2057UpaRT9TedBGzM'
 });
 
 bot.on('ready', function (evt) {
@@ -37,7 +37,7 @@ bot.on('message', function (message) {
 bot.on('disconnect', (event) => logger.log('info', 'Disconnected with close event: ' + event));
 
 // Connect bot
-bot.login(auth.token);
+bot.login('NTAxMzQ4ODc5MDE1MzQ2MTc3.Xagzgw.bOlojzL1YD2057UpaRT9TedBGzM');
 
 // Testcode taken from: https://github.com/synicalsyntax/discord.js-heroku/blob/web/index.js
 // Credits to synicalsyntax

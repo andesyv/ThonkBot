@@ -2,6 +2,7 @@ var Discord = require('discord.js');
 const fs = require('fs');
 var github = require('octonode');
 const jokes = require('./jokes.json');
+const blackjack = require('./lib/thonkbot-blackjack');
 // const christmasThonk = require('./lib/thonkbot-christmas');
 
 // Converts the message to a command and runs it.
@@ -39,6 +40,9 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'RANDOMTHONK':
         case 'RANDOMTHINK':
             sendRandomFile(message, './ThonkEmojis/', logger);
+            break;
+        case 'BLACKJACK':
+            blackjack.startGame(message, logger);
             break;
         case 'SPOOK':
         case 'RANDOMSPOOK':
