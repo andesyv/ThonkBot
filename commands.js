@@ -110,7 +110,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'COMPLIMENTS':
         case 'COMPLIMENT':
         case 'COMP':
-        case 'Kompliment':
+        case 'KOMPLIMENT':
 
         if (message.mentions.users.size > 0)
             sendPersonalCompliment(message, logger);
@@ -155,7 +155,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'COMPLETEREQUEST':
         case 'DELETEREQUEST':
         case 'REMOVEREQUEST':
-            removeRequest(message, logger);
+            removeRequest(message, args, logger);
             break;
 
         /* Christmas is over
@@ -195,33 +195,50 @@ function getLastCommit (message, logger, args) {
     });
 }
 
-function removeRequest (message, logger) {
-    fs.readFile('requests.txt', 'utf8', (err, data) => {
-        if (err) {
-            message.channel.send('There are no requests.');
-            logger.log('info', "Didn't remove file because: " + err.message);
-            return;
-        }
-        var contents = data.split('\n');
-        var newContents = '';
-        for (let i = 0; i < contents.length - 2; i++) {
-            // if (i == contents.length - 2) continue; // Skip if it's the last line.
-            newContents += contents[i] + '\n';
-        }
-        if (newContents === '') {
-            fs.unlink('requests.txt', (err) => {
-                if (err) throw err;
-                logger.log('info', 'Removed requests.txt because it was empty.');
-                message.channel.send('Done!');
-            });
-        } else {
-            fs.writeFile('requests.txt', newContents, 'utf8', (err) => {
-                if (err) throw err;
-                // Writing successful.
-                message.channel.send('Done!');
-            });
-        }
-    });
+function removeRequest (message, args, logger) {
+    if (0 < args.length && !isNaN(args[0])) {
+        fs.readFile('requests.txt', 'utf8', (err, data) => {
+            if (err) {
+                message.channel.send('There are no requests.');
+                logger.log('info', "Didn't remove file because: " + err.message);
+                return;
+            }
+            var contents = data.split('\n');
+            if (args[0] < 1 || args[0] > contents.length - 1) {
+                logger.log('info', "Didn't remove request because it was out of range");
+                message.channel.send('Please choose a request number that is on the request list to remove.')
+            } else {
+                var newContents = '';
+                for (let i = 0; i < contents.length - 1; i++) {
+                    if (i == (args[0] - 1))
+                        logger.log('warn', `User ${message.author.tag} removed request: ${contents[i]}`);
+                    else
+                        newContents += contents[i] + '\n';
+                }
+                if (newContents === '') {
+                    fs.unlink('requests.txt', (err) => {
+                        if (err) {
+                            logger.log('error', err.message);
+                            throw err;
+                        }
+                        logger.log('info', 'Removed requests.txt because it was empty.');
+                        message.channel.send('Done!');
+                    });
+                } else {
+                    fs.writeFile('requests.txt', newContents, 'utf8', (err) => {
+                        if (err) {
+                            logger.log('error', err.message);
+                            throw err;
+                        }
+                        // Writing successful.
+                        message.channel.send('Done!');
+                    });
+                }
+            }
+        });
+    } else {
+        message.channel.send('Must specify which request to remove.');
+    }
 }
 
 function getRequests (message, logger) {

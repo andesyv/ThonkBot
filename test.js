@@ -15,7 +15,22 @@ const logger = winston.createLogger({
     // - Write to all logs with level `info` and below to `combined.log`
     // - Write all logs error (and below) to `error.log`.
     //
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'error.log', level: 'error',
+                                    format: winston.format.combine(
+                                        winston.format.timestamp({
+                                        format: 'ss::mm::HH DD-MM-YYYY'
+                                      }),
+                                      winston.format.json()
+                                      ),
+                                  }),
+    new winston.transports.File({ filename: 'warning.log', level: 'warn',
+                                    format: winston.format.combine(
+                                        winston.format.timestamp({
+                                        format: 'ss::mm::HH DD-MM-YYYY'
+                                      }),
+                                      winston.format.json()
+                                      ),
+                                  }),
     new winston.transports.Console({
         colorize: 'all'
     })
@@ -136,5 +151,9 @@ function sendManySpooks (message, logger) {
     // }
 }
 
-sendManySpooks(new Discord.Message(), logger);
+// sendManySpooks(new Discord.Message(), logger);
 // getLastCommit (new Discord.Message(), logger);
+
+logger.log('info', 'This is an info message!');
+logger.log('warn', 'This is a warning!');
+logger.log('error', 'This is an error!');
