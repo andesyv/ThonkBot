@@ -4,6 +4,7 @@ var github = require('octonode');
 const jokes = require('./jokes.json');
 const compliments = require('./compliments.json');
 const christmas = require('./christmas.json');
+const quotes = require('./quotes.json');
 // const christmasThonk = require('./lib/thonkbot-christmas');
 
 // Converts the message to a command and runs it.
@@ -115,7 +116,17 @@ function parseCommand(bot, cmd, args, message, logger) {
             sendPersonalCompliment(message, logger);
         else
               message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
+        break;
 
+        case 'LOTR':
+        case 'HOBBIT':
+        case 'GANDALF':
+          message.channel.send(quotes.LOTR[Math.floor(Math.random() * quotes.LOTR.length)]);
+        break;
+        
+        case 'HODOR':
+        case 'GOT':
+        message.channel.send(quotes.GOT[Math.floor(Math.random() * quotes.GOT.length)]);
         break;
 
         case 'PATCH':
