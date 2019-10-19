@@ -117,16 +117,21 @@ function parseCommand(bot, cmd, args, message, logger) {
         else
               message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
         break;
-
+// ... Quotes from movies and tv-show
         case 'LOTR':
         case 'HOBBIT':
         case 'GANDALF':
           message.channel.send(quotes.LOTR[Math.floor(Math.random() * quotes.LOTR.length)]);
         break;
-        
+
         case 'HODOR':
         case 'GOT':
         message.channel.send(quotes.GOT[Math.floor(Math.random() * quotes.GOT.length)]);
+        break;
+
+        case 'MOVIE':
+        case 'QUOTE':
+        message.channel.send(quotes.MovieQuotes[Math.floor(Math.random() * quotes.MovieQuotes.length)]);
         break;
 
         case 'PATCH':
