@@ -3,6 +3,7 @@ var winston = require('winston');
 var Discord = require('discord.js');
 // var commands = require('./commands.js');
 var github = require('octonode');
+const fs = require('fs');
 
 
 // Initialize logger
@@ -71,4 +72,69 @@ function getLastCommit (message, logger, args) {
     });
 }
 
-getLastCommit (new Discord.Message(), logger);
+/** Shuffles array in place.
+ * Modern version of Fisher-Yates (aka Knuth) Shuffle. ES6 version
+ * @param {Array} a items An array containing the items.
+ * @see https://bost.ocks.org/mike/shuffle/ and https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
+ */
+function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function sendManySpooks (message, logger) {
+    let readDir = './Spooks/';
+    let spookList = Array(4);
+    for (var i = 0; i < spookList.length; ++i)
+        spookList[i] = Array();
+
+    let files = fs.readdirSync(readDir);
+
+    if (files.constructor === Array) {
+        // Shuffle Array
+        files = shuffle(files);
+
+        var i = 0, messageSize = 0;
+        files.forEach((file) => {
+            logger.log('info', `File is ${file}`)
+            if (messageSize >= 8 * 1024 * 1024)
+            {
+                i++;
+                messageSize = 0;
+            }
+
+            logger.log('info', `spooklist is ${spookList}`);
+
+            spookList[i].push({
+                attachment: readDir + file,
+                name: file
+            });
+
+            messageSize += fs.statSync(readDir + file).size;
+
+            // logger.log('info', `i is ${i} and messageSize is ${messageSize}`);
+        });
+    }
+
+    for (var i = 0; i < spookList.length; i++)
+    {
+        logger.log('info', `Spooklist ${i}:`);
+        for (var object in spookList[i])
+        {
+            logger.log('info', spookList[i][object].name);
+        }
+    }
+
+    // for (let list in spookList)
+    // {
+    //     message.channel.send({
+    //         files: list
+    //     });
+    // }
+}
+
+sendManySpooks(new Discord.Message(), logger);
+// getLastCommit (new Discord.Message(), logger);
