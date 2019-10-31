@@ -2,6 +2,9 @@ var Discord = require('discord.js');
 const fs = require('fs');
 var github = require('octonode');
 const jokes = require('./jokes.json');
+const compliments = require('./compliments.json');
+const christmas = require('./christmas.json');
+const quotes = require('./quotes.json');
 // const christmasThonk = require('./lib/thonkbot-christmas');
 
 // Converts the message to a command and runs it.
@@ -49,7 +52,7 @@ function parseCommand(bot, cmd, args, message, logger) {
             break;
         case 'MANYSPOOKS':
         case 'ALLSPOOKS':
-            sendManySpooks(message);
+            sendManySpooks(message, logger);
             break;
         /* Christmas is over
         case 'CHRISTMASNAME':
@@ -94,6 +97,43 @@ function parseCommand(bot, cmd, args, message, logger) {
             }
             break;
         */
+        /*
+        case 'CHRISTMAS':
+        case 'JUL':
+        if (message.mentions.users.size > 0)
+            sendPersonalChristmasGreeting(message, logger);
+        else
+              message.channel.send(christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]);
+
+        break;*/
+
+        case 'COMPLIMENTS':
+        case 'COMPLIMENT':
+        case 'COMP':
+        case 'KOMPLIMENT':
+
+        if (message.mentions.users.size > 0)
+            sendPersonalCompliment(message, logger);
+        else
+              message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
+        break;
+// ... Quotes from movies and tv-show
+        case 'LOTR':
+        case 'HOBBIT':
+        case 'GANDALF':
+          message.channel.send(quotes.LOTR[Math.floor(Math.random() * quotes.LOTR.length)]);
+        break;
+
+        case 'HODOR':
+        case 'GOT':
+        message.channel.send(quotes.GOT[Math.floor(Math.random() * quotes.GOT.length)]);
+        break;
+
+        case 'MOVIE':
+        case 'QUOTE':
+        message.channel.send(quotes.MovieQuotes[Math.floor(Math.random() * quotes.MovieQuotes.length)]);
+        break;
+
         case 'PATCH':
         case 'PATCHNOTES':
         case 'NOTES':
@@ -115,7 +155,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'COMPLETEREQUEST':
         case 'DELETEREQUEST':
         case 'REMOVEREQUEST':
-            removeRequest(message, logger);
+            removeRequest(message, args, logger);
             break;
 
         /* Christmas is over
@@ -155,33 +195,50 @@ function getLastCommit (message, logger, args) {
     });
 }
 
-function removeRequest (message, logger) {
-    fs.readFile('requests.txt', 'utf8', (err, data) => {
-        if (err) {
-            message.channel.send('There are no requests.');
-            logger.log('info', "Didn't remove file because: " + err.message);
-            return;
-        }
-        var contents = data.split('\n');
-        var newContents = '';
-        for (let i = 0; i < contents.length - 2; i++) {
-            // if (i == contents.length - 2) continue; // Skip if it's the last line.
-            newContents += contents[i] + '\n';
-        }
-        if (newContents === '') {
-            fs.unlink('requests.txt', (err) => {
-                if (err) throw err;
-                logger.log('info', 'Removed requests.txt because it was empty.');
-                message.channel.send('Done!');
-            });
-        } else {
-            fs.writeFile('requests.txt', newContents, 'utf8', (err) => {
-                if (err) throw err;
-                // Writing successful.
-                message.channel.send('Done!');
-            });
-        }
-    });
+function removeRequest (message, args, logger) {
+    if (0 < args.length && !isNaN(args[0])) {
+        fs.readFile('requests.txt', 'utf8', (err, data) => {
+            if (err) {
+                message.channel.send('There are no requests.');
+                logger.log('info', "Didn't remove file because: " + err.message);
+                return;
+            }
+            var contents = data.split('\n');
+            if (args[0] < 1 || args[0] > contents.length - 1) {
+                logger.log('info', "Didn't remove request because it was out of range");
+                message.channel.send('Please choose a request number that is on the request list to remove.')
+            } else {
+                var newContents = '';
+                for (let i = 0; i < contents.length - 1; i++) {
+                    if (i == (args[0] - 1))
+                        logger.log('warn', `User ${message.author.tag} removed request: ${contents[i]}`);
+                    else
+                        newContents += contents[i] + '\n';
+                }
+                if (newContents === '') {
+                    fs.unlink('requests.txt', (err) => {
+                        if (err) {
+                            logger.log('error', err.message);
+                            throw err;
+                        }
+                        logger.log('info', 'Removed requests.txt because it was empty.');
+                        message.channel.send('Done!');
+                    });
+                } else {
+                    fs.writeFile('requests.txt', newContents, 'utf8', (err) => {
+                        if (err) {
+                            logger.log('error', err.message);
+                            throw err;
+                        }
+                        // Writing successful.
+                        message.channel.send('Done!');
+                    });
+                }
+            }
+        });
+    } else {
+        message.channel.send('Must specify which request to remove.');
+    }
 }
 
 function getRequests (message, logger) {
@@ -206,7 +263,7 @@ function getRequests (message, logger) {
     });
 }
 
-function sendManySpooks (message) {
+function sendManySpooks (message, logger) {
     let readDir = './Spooks/';
     let spookList = [];
     let files = fs.readdirSync(readDir);
@@ -215,17 +272,28 @@ function sendManySpooks (message) {
         // Shuffle Array
         files = shuffle(files);
 
-        files.forEach(
-            (element) => spookList.push({
-                attachment: readDir + element,
-                name: element
-            })
-        );
+        var messageSize = 0;
+        files.forEach((file) => {
+            let fileSize = fs.statSync(readDir + file).size;
+
+            if (messageSize + fileSize < 8 * 1024 * 1024 && spookList.length < 10)
+            {
+                spookList.push({
+                    attachment: readDir + file,
+                    name: file
+                });
+
+                messageSize += fileSize;
+            }
+        });
     }
 
-    message.channel.send({
-        files: spookList
-    });
+    if (0 < spookList.length)
+    {
+        message.channel.send({
+            files: spookList
+        });
+    }
 }
 
 function sendRandomFile(message, folder, logger) {
@@ -279,3 +347,33 @@ function getRandomFile(folder) {
          logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
      });
  }
+
+ function sendPersonalChristmasGreeting(message, logger){
+   let mentioned = message.mentions.users.first();
+   // Check for crash
+   if (mentioned == null) {
+       message.channel.send('Nei!');
+       return;
+     }
+     let newDMChannel = mentioned.createDM();
+     newDMChannel.then((value) => {
+         value.send(`${christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]} Best Regards ${message.author.tag}!` )
+
+     }).catch(() => {
+         logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
+     });
+}
+function sendPersonalCompliment(message, logger){
+  let mentioned = message.mentions.users.first();
+  // Check for crash
+  if (mentioned == null) {
+      message.channel.send('Nei!');
+      return;
+    }
+    let newDMChannel = mentioned.createDM();
+    newDMChannel.then((value) => {
+        value.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
+    }).catch(() => {
+        logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
+    });
+}
