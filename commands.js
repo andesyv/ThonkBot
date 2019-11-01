@@ -5,7 +5,7 @@ const jokes = require('./jokes.json');
 const compliments = require('./compliments.json');
 const christmas = require('./christmas.json');
 const quotes = require('./quotes.json');
-// const christmasThonk = require('./lib/thonkbot-christmas');
+const christmasThonk = require('./lib/thonkbot-christmas');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -43,6 +43,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'RANDOMTHINK':
             sendRandomFile(message, './ThonkEmojis/', logger);
             break;
+        /* Spooktober is over. :/
         case 'SPOOK':
         case 'RANDOMSPOOK':
             if (message.mentions.users.size > 0)
@@ -54,14 +55,13 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'ALLSPOOKS':
             sendManySpooks(message, logger);
             break;
-        /* Christmas is over
+        */
         case 'CHRISTMASNAME':
         case 'CHRISTMAS-NAME':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.christmasName(message, logger);
             }
             break;
-        */
         case 'CAT':
         case 'CATS':
         case 'RANDOMCAT':
@@ -90,33 +90,28 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'KNOCKKNOCK':
             message.channel.send(jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]);
             break;
-        /* Christmas is over
         case 'PEPPERKAKE':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.sendPepperkake(message, logger);
             }
             break;
-        */
-        /*
         case 'CHRISTMAS':
         case 'JUL':
-        if (message.mentions.users.size > 0)
-            sendPersonalChristmasGreeting(message, logger);
-        else
-              message.channel.send(christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]);
+            if (message.mentions.users.size > 0)
+                sendPersonalChristmasGreeting(message, logger);
+            else
+                  message.channel.send(christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]);
 
-        break;*/
-
+            break;
         case 'COMPLIMENTS':
         case 'COMPLIMENT':
         case 'COMP':
         case 'KOMPLIMENT':
-
-        if (message.mentions.users.size > 0)
-            sendPersonalCompliment(message, logger);
-        else
-              message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
-        break;
+            if (message.mentions.users.size > 0)
+                sendPersonalCompliment(message, logger);
+            else
+                  message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
+            break;
 // ... Quotes from movies and tv-show
         case 'LOTR':
         case 'HOBBIT':
@@ -157,14 +152,11 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'REMOVEREQUEST':
             removeRequest(message, args, logger);
             break;
-
-        /* Christmas is over
         case 'SECRETSANTA':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.secretSanta(message, logger);
             }
             break;
-        */
         default:
             break;
      }
