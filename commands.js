@@ -6,6 +6,7 @@ const compliments = require('./compliments.json');
 const christmas = require('./christmas.json');
 const quotes = require('./quotes.json');
 const christmasThonk = require('./lib/thonkbot-christmas');
+const path = require('path');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -37,19 +38,19 @@ function parseCommand(bot, cmd, args, message, logger) {
         // !thonk
         case 'THONK':
         case 'THONKING':
-            message.channel.send(new Discord.Attachment('./ThonkEmojis/thonk.png'));
+            message.channel.send(new Discord.Attachment(path.join(__dirname, 'ThonkEmojis', 'thonk.png')));
             break;
         case 'RANDOMTHONK':
         case 'RANDOMTHINK':
-            sendRandomFile(message, './ThonkEmojis/', logger);
+            sendRandomFile(message, path.join(__dirname, 'ThonkEmojis'), logger);
             break;
         /* Spooktober is over. :/
         case 'SPOOK':
         case 'RANDOMSPOOK':
             if (message.mentions.users.size > 0)
-                sendPersonalSpook(message, './Spooks/', logger);
+                sendPersonalSpook(message, path.join(__dirname, 'Spooks'), logger);
             else
-                sendRandomFile(message, './Spooks/', logger);
+                sendRandomFile(message, path.join(__dirname, 'Spooks'), logger);
             break;
         case 'MANYSPOOKS':
         case 'ALLSPOOKS':
@@ -65,26 +66,26 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'CAT':
         case 'CATS':
         case 'RANDOMCAT':
-            sendRandomFile(message, './Cats/', logger);
+            sendRandomFile(message, path.join(__dirname, 'Cats'), logger);
             break;
         case 'COLA':
         case 'COKE':
         case 'COCACOLA':
         case 'PEPSI':
-            sendRandomFile(message, './Coke/', logger);
+            sendRandomFile(message, path.join(__dirname, 'Coke'), logger);
             break;
         case 'NEZUKO':
         case 'ANIME':
         case 'WEEB':
         case 'WHOLESOME':
-            sendRandomFile(message, './Anime/', logger);
+            sendRandomFile(message, path.join(__dirname, 'Anime'), logger);
             break;
         case 'POKEMON':
         case 'RANDOMPOKEMON':
         case 'PIKACHU':
         case 'PIKAPIKA':
         case 'ASH':
-            sendRandomFile(message, './Pokemon/', logger);
+            sendRandomFile(message, path.join(__dirname, 'Pokemon'), logger);
             break;
         case 'KNOCK':
         case 'KNOCKKNOCK':
@@ -136,7 +137,7 @@ function parseCommand(bot, cmd, args, message, logger) {
             getLastCommit(message, logger, args);
             break;
         case 'REQUEST':
-            fs.appendFile('requests.txt', message.content.slice(cmd.length + 2) + '\n', (err) => {
+            fs.appendFile(path.join(__dirname, 'requests.txt'), message.content.slice(cmd.length + 2) + '\n', (err) => {
                 if (err) {
                     throw err;
                 }
@@ -189,7 +190,7 @@ function getLastCommit (message, logger, args) {
 
 function removeRequest (message, args, logger) {
     if (0 < args.length && !isNaN(args[0])) {
-        fs.readFile('requests.txt', 'utf8', (err, data) => {
+        fs.readFile(path.join(__dirname, 'requests.txt'), 'utf8', (err, data) => {
             if (err) {
                 message.channel.send('There are no requests.');
                 logger.log('info', "Didn't remove file because: " + err.message);
@@ -208,7 +209,7 @@ function removeRequest (message, args, logger) {
                         newContents += contents[i] + '\n';
                 }
                 if (newContents === '') {
-                    fs.unlink('requests.txt', (err) => {
+                    fs.unlink(path.join(__dirname, 'requests.txt'), (err) => {
                         if (err) {
                             logger.log('error', err.message);
                             throw err;
@@ -217,7 +218,7 @@ function removeRequest (message, args, logger) {
                         message.channel.send('Done!');
                     });
                 } else {
-                    fs.writeFile('requests.txt', newContents, 'utf8', (err) => {
+                    fs.writeFile(path.join(__dirname, 'requests.txt'), newContents, 'utf8', (err) => {
                         if (err) {
                             logger.log('error', err.message);
                             throw err;
@@ -234,7 +235,7 @@ function removeRequest (message, args, logger) {
 }
 
 function getRequests (message, logger) {
-    fs.readFile('requests.txt', 'utf8', (err, data) => {
+    fs.readFile(path.join(__dirname, 'requests.txt'), 'utf8', (err, data) => {
         if (err) {
             message.channel.send('There are no requests at the moment.');
             logger.log('info', "Didn't read file because: " + err.message);
@@ -256,7 +257,7 @@ function getRequests (message, logger) {
 }
 
 function sendManySpooks (message, logger) {
-    let readDir = './Spooks/';
+    let readDir = path.join(__dirname, 'Spooks');
     let spookList = [];
     let files = fs.readdirSync(readDir);
 
@@ -291,7 +292,7 @@ function sendManySpooks (message, logger) {
 function sendRandomFile(message, folder, logger) {
     let file = getRandomFile(folder);
     if (typeof file == "string") {
-        message.channel.send(new Discord.Attachment(folder + file));
+        message.channel.send(new Discord.Attachment(path.join(folder, file)));
     } else {
         logger.log('error', 'Cannot find random file in ' + folder);
     }

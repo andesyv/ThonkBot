@@ -2,7 +2,7 @@
   "name": "ThonkBot",
   "version": "1.7.4",
   "description": "A thonk discord bot",
-  "main": "main.js",
+  "main": "./main.js",
   "repository": "andesyv/ThonkBot",
   "author": "andesyv",
   "engines": {

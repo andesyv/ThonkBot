@@ -4,6 +4,8 @@ var commands = require('./commands.js');
 var auth = require('./auth.json');
 
 
+exports.init = function()
+{
 // Initialize logger
 const logger = winston.createLogger({
   level: 'info',
@@ -53,6 +55,14 @@ bot.on('disconnect', (event) => logger.log('info', 'Disconnected with close even
 
 // Connect bot
 bot.login(auth.token);
+}
+
+
+
+if (require.main === module)
+{
+    exports.init();
+}
 
 // Testcode taken from: https://github.com/synicalsyntax/discord.js-heroku/blob/web/index.js
 // Credits to synicalsyntax
