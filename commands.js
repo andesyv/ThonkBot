@@ -30,6 +30,13 @@ function parseCommand(bot, cmd, args, message, logger) {
     cmd = cmd.toUpperCase(); // Convert to uppercase letters.
 
     switch(cmd) {
+        case 'BACHELOR':
+        case 'BACHELORLEFT':
+        case 'BACHELORTIMELEFT':
+        case 'PILOT':
+        case 'PILOTLEFT':
+            message.channel.send('Time left until bachelor deadline: ' + timeLeft(new Date('May 20, 2020 12:00:00')));
+            break;
         // !think
         case 'THINK':
         case 'THINKING':
@@ -369,4 +376,23 @@ function sendPersonalCompliment(message, logger){
     }).catch(() => {
         logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
     });
+}
+
+function timeLeft(date){
+    if (date instanceof Date){
+        let inMs = {};
+        inMs.second = 1000;
+        inMs.min = inMs.second * 60;
+        inMs.hour = inMs.min * 60;
+        inMs.day = inMs.hour * 24;
+
+        let now = Date.now();
+        let left = date - now;
+        let days = Math.floor(left / inMs.day),
+            hours = Math.floor((left % inMs.day) / inMs.hour),
+            mins = Math.floor((left % inMs.day % inMs.hour) / inMs.min),
+            seconds = Math.floor((left % inMs.day % inMs.hour % inMs.min) / inMs.second);
+
+        return `${days} days, ${hours} hours, ${mins} mins, ${seconds} seconds left`;
+    }
 }
