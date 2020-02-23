@@ -4,16 +4,33 @@ var commands = require('./commands.js');
 var auth = require('./auth.json');
 
 
+exports.init = function()
+{
 // Initialize logger
 const logger = winston.createLogger({
-  level: 'debug',
+  level: 'info',
   format: winston.format.json(),
   transports: [
     //
     // - Write to all logs with level `info` and below to `combined.log`
     // - Write all logs error (and below) to `error.log`.
     //
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'error.log', level: 'error',
+                                    format: winston.format.combine(
+                                        winston.format.timestamp({
+                                        format: 'ss::mm::HH DD-MM-YYYY'
+                                      }),
+                                      winston.format.json()
+                                      ),
+                                  }),
+    new winston.transports.File({ filename: 'warning.log', level: 'warn',
+                                    format: winston.format.combine(
+                                        winston.format.timestamp({
+                                        format: 'ss::mm::HH DD-MM-YYYY'
+                                      }),
+                                      winston.format.json()
+                                      ),
+                                  }),
     new winston.transports.Console({
         colorize: 'all'
     })
@@ -38,6 +55,14 @@ bot.on('disconnect', (event) => logger.log('info', 'Disconnected with close even
 
 // Connect bot
 bot.login(auth.token);
+}
+
+
+
+if (require.main === module)
+{
+    exports.init();
+}
 
 // Testcode taken from: https://github.com/synicalsyntax/discord.js-heroku/blob/web/index.js
 // Credits to synicalsyntax
