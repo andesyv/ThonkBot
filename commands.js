@@ -35,7 +35,8 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'BACHELORTIMELEFT':
         case 'PILOT':
         case 'PILOTLEFT':
-            message.channel.send('Time left until bachelor deadline: ' + timeLeft(new Date('May 20, 2020 12:00:00')));
+            message.channel.send(`Time left until bachelor deadline: ${timeLeft(new Date('May 20, 2020 12:00:00'))}` +
+            `\nPercentage: ${percentageTowardsDate(new Date('Jan 6, 2020 9:00:00'), new Date('May 20, 2020 12:00:00')).toFixed(2)}`);
             break;
         // !think
         case 'THINK':
@@ -395,4 +396,15 @@ function timeLeft(date){
 
         return `${days} days, ${hours} hours, ${mins} mins, ${seconds} seconds left`;
     }
+    return null;
+}
+
+function percentageTowardsDate(from, to){
+    if (from instanceof Date && to instanceof Date){
+        let now = Date.now();
+        let passed = now - from;
+        let percentage = passed / (to - from);
+        return percentage;
+    }
+    return null;
 }
