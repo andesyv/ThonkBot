@@ -35,14 +35,11 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'BACHELORTIMELEFT':
         case 'PILOT':
         case 'PILOTLEFT':
-            let p = percentageTowardsDate(new Date('Jan 6, 2020 9:00:00'), new Date('May 20, 2020 12:00:00'));
-            if (p <= 100)
             {
-                message.channel.send(`Time left until bachelor deadline: ${timeLeft(new Date('May 20, 2020 12:00:00'))}` +
-                `\nPercentage: ${p.toFixed(2)}%`);
-            } else {
-                message.channel.send(`Time left until bachelor deadline: 0 days, hours, minutes and seconds` +
-                `\nPercentage: 100%. You're done! :o`);
+            let p = percentageTowardsDate(new Date('Jan 6, 2020 9:00:00'), new Date('May 20, 2020 12:00:00'));
+            let before = p <= 100;
+            message.channel.send(`Time ` + (before ? 'left until' : 'since') + ` bachelor deadline: ${timeLeft(new Date('May 20, 2020 12:00:00'), before)}\n` +
+            (before ? `Percentage: ${p.toFixed(2)}%` : `You're done! :o`));
             }
             break;
         // !think
@@ -386,7 +383,7 @@ function sendPersonalCompliment(message, logger){
     });
 }
 
-function timeLeft(date){
+function timeLeft(date, before = true){
     if (date instanceof Date){
         let inMs = {};
         inMs.second = 1000;
@@ -395,7 +392,7 @@ function timeLeft(date){
         inMs.day = inMs.hour * 24;
 
         let now = Date.now();
-        let left = date - now;
+        let left = before ? (date - now) : (now - date);
         let days = Math.floor(left / inMs.day),
             hours = Math.floor((left % inMs.day) / inMs.hour),
             mins = Math.floor((left % inMs.day % inMs.hour) / inMs.min),
