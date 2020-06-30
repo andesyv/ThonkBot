@@ -50,7 +50,7 @@ function parseCommand(bot, cmd, args, message, logger) {
         // !thonk
         case 'THONK':
         case 'THONKING':
-            message.channel.send(new Discord.Attachment(path.join(__dirname, 'ThonkEmojis', 'thonk.png')));
+            message.channel.send(new Discord.MessageAttachment(path.join(__dirname, 'ThonkEmojis', 'thonk.png')));
             break;
         case 'RANDOMTHONK':
         case 'RANDOMTHINK':
@@ -304,7 +304,7 @@ function sendManySpooks (message, logger) {
 function sendRandomFile(message, folder, logger) {
     let file = getRandomFile(folder);
     if (typeof file == "string") {
-        message.channel.send(new Discord.Attachment(path.join(folder, file)));
+        message.channel.send(new Discord.MessageAttachment(path.join(folder, file)));
     } else {
         logger.log('error', 'Cannot find random file in ' + folder);
     }
@@ -344,7 +344,7 @@ function getRandomFile(folder) {
          let file = getRandomFile(folder);
          if (typeof file == "string") {
              value.send(`You've been spooked by ${message.author.tag}!`,
-             new Discord.Attachment(folder + file));
+             new Discord.MessageAttachment(folder + file));
          } else {
              logger.log('error', 'Cannot find random file in ' + folder);
          }
