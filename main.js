@@ -2,59 +2,111 @@ var Discord = require('discord.js');
 var winston = require('winston');
 var commands = require('./commands.js');
 var auth = require('./auth.json');
-
+const fs = require('fs');
+var schedule = require('node-schedule');
 
 exports.init = function()
 {
-// Initialize logger
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  transports: [
-    //
-    // - Write to all logs with level `info` and below to `combined.log`
-    // - Write all logs error (and below) to `error.log`.
-    //
-    new winston.transports.File({ filename: 'error.log', level: 'error',
-                                    format: winston.format.combine(
-                                        winston.format.timestamp({
-                                        format: 'ss::mm::HH DD-MM-YYYY'
-                                      }),
-                                      winston.format.json()
-                                      ),
-                                  }),
-    new winston.transports.File({ filename: 'warning.log', level: 'warn',
-                                    format: winston.format.combine(
-                                        winston.format.timestamp({
-                                        format: 'ss::mm::HH DD-MM-YYYY'
-                                      }),
-                                      winston.format.json()
-                                      ),
-                                  }),
-    new winston.transports.Console({
-        colorize: 'all'
-    })
-  ]
-});
-// Initialize Discord Bot
-const bot = new Discord.Client({
-   token: auth.token
-});
+  // Initialize logger
+  const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+      //
+      // - Write to all logs with level `info` and below to `combined.log`
+      // - Write all logs error (and below) to `error.log`.
+      //
+      new winston.transports.File({ filename: 'error.log', level: 'error',
+                                      format: winston.format.combine(
+                                          winston.format.timestamp({
+                                          format: 'ss::mm::HH DD-MM-YYYY'
+                                        }),
+                                        winston.format.json()
+                                        ),
+                                    }),
+      new winston.transports.File({ filename: 'warning.log', level: 'warn',
+                                      format: winston.format.combine(
+                                          winston.format.timestamp({
+                                          format: 'ss::mm::HH DD-MM-YYYY'
+                                        }),
+                                        winston.format.json()
+                                        ),
+                                    }),
+      new winston.transports.Console({
+          colorize: 'all'
+      })
+    ]
+  });
 
-bot.on('ready', function (evt) {
-    logger.log('info','Connected');
-    logger.log('info','Logged in as: ' + bot.user.tag + ' - (' + bot.user.id + ')');
-});
+  // Read bot settings (settings for the environment)
+  logger.log('info', 'Reading settings.');
+  var settings = JSON.parse('{ "adminUser": "USER#TAG" }');
+  fs.readFile('./settings.json', (err, data) => {
+    if (err) {
+      logger.log('info', 'Failed to read settings, creating default settings file.');
+      fs.writeFile("settings.json", JSON.stringify(settings, null, '\t'), 'utf8', (err) => {
+        if (err)
+          logger.log('error', 'Failed to create settings file.');
+      });
+    } else {
+      settings = JSON.parse(data);
+    }
 
-bot.on('message', function (message) {
-    commands.runCommand(bot, message, logger); // Run the command.
-});
 
-// In case of disconnect:
-bot.on('disconnect', (event) => logger.log('info', 'Disconnected with close event: ' + event));
+    // Initialize Discord Bot
+    const bot = new Discord.Client({
+      token: auth.token
+    });
 
-// Connect bot
-bot.login(auth.token);
+    bot.on('ready', function (evt) {
+      logger.log('info', 'Connected');
+      logger.log('info', 'Logged in as: ' + bot.user.tag + ' - (' + bot.user.id + ')');
+      initSettings(logger, bot, settings);
+    });
+
+    bot.on('message', function (message) {
+      commands.runCommand(bot, message, logger); // Run the command.
+    });
+
+    // In case of disconnect:
+    bot.on('disconnect', (event) => logger.log('info', 'Disconnected with close event: ' + event));
+
+    // Connect bot
+    bot.login(auth.token);
+  });
+}
+
+function initSettings(logger, bot, settings)
+{
+  logger.log('info', 'Cached user count: ' + bot.users.cache.size);
+  for (let [snowflake, user] of bot.users.cache) {
+    let userFound = false;
+
+    bot.users.fetch(snowflake).then((user) => {
+      logger.log('info', 'Cached user: ' + user.tag);
+      if (user && user.tag === settings.adminUser) {
+        logger.log('info', 'Admin user found and cached: ' + user.tag)
+        settings.adminUser = user;
+        userFound = true;
+      }
+    }).catch((err) => {
+      logger.log('Failed to find user because: ' + err);
+    });
+
+    if (userFound)
+      break;
+  }
+
+  // Setup timer for ip validation checking:
+  schedule.scheduleJob({ hour: 21, minute: 41 }, () => {
+    if (settings.adminUser instanceof Discord.User) {
+      settings.adminUser.createDM().catch((err) => {
+        logger.log('error', 'Failed to create dm channel with admin user.');
+      }).then((dm) => {
+        dm.send('Hi ' + settings.adminUser.tag + '!');
+      });
+    }
+  });
 }
 
 
