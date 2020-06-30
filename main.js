@@ -4,6 +4,9 @@ var commands = require('./commands.js');
 var auth = require('./auth.json');
 const fs = require('fs');
 var schedule = require('node-schedule');
+const dns = require('dns');
+
+var settings = JSON.parse('{ "adminUser": "USER#TAG" }');
 
 exports.init = function()
 {
@@ -40,7 +43,6 @@ exports.init = function()
 
   // Read bot settings (settings for the environment)
   logger.log('info', 'Reading settings.');
-  var settings = JSON.parse('{ "adminUser": "USER#TAG" }');
   fs.readFile('./settings.json', (err, data) => {
     if (err) {
       logger.log('info', 'Failed to read settings, creating default settings file.');
@@ -61,7 +63,7 @@ exports.init = function()
     bot.on('ready', function (evt) {
       logger.log('info', 'Connected');
       logger.log('info', 'Logged in as: ' + bot.user.tag + ' - (' + bot.user.id + ')');
-      initSettings(logger, bot, settings);
+      initSettings(logger, bot);
     });
 
     bot.on('message', function (message) {
@@ -76,37 +78,74 @@ exports.init = function()
   });
 }
 
-function initSettings(logger, bot, settings)
-{
+function initSettings(logger, bot) {
   logger.log('info', 'Cached user count: ' + bot.users.cache.size);
   for (let [snowflake, user] of bot.users.cache) {
-    let userFound = false;
-
-    bot.users.fetch(snowflake).then((user) => {
-      logger.log('info', 'Cached user: ' + user.tag);
-      if (user && user.tag === settings.adminUser) {
-        logger.log('info', 'Admin user found and cached: ' + user.tag)
-        settings.adminUser = user;
-        userFound = true;
+    bot.users.fetch(snowflake)
+    .then((user) => {
+      if (settings.adminUser instanceof Discord.User) {
+        // Altough nothing got done we resolve this promise
+        // because we already have done the work before.
+        return Promise.resolve('Already found an admin user.');
       }
-    }).catch((err) => {
-      logger.log('Failed to find user because: ' + err);
+      if (user && user.tag === settings.adminUser) {
+        logger.log('info', 'Admin user found and registered: ' + user.tag)
+        settings.adminUser = user;
+        scheduleIPValidationTimer(logger);
+        // Do one validation check at startup
+        validateIP(logger);
+      }
+    }, (err) => {
+      logger.log('error', 'Failed to fetch user because: ' + err);
     });
-
-    if (userFound)
-      break;
   }
+}
+
+function scheduleIPValidationTimer(logger) {
+  logger.log('info', 'Setting up scheduled job for ip validation.');
 
   // Setup timer for ip validation checking:
-  schedule.scheduleJob({ hour: 21, minute: 41 }, () => {
-    if (settings.adminUser instanceof Discord.User) {
+  schedule.scheduleJob({ hour: 18, minute: 0 }, () => {
+    validateIP(logger);
+  });
+}
+
+function validateIP(logger)
+{
+  const validationdomains = ['jallaboika.com', 'screamingpotato.ddns.net'];
+
+  if (settings.adminUser instanceof Discord.User) {
+    let domainsSame = new Promise((resolve, reject) => {
+      dns.lookup(validationdomains[0], (err, address, family) => {
+        if (err) reject(err);
+        else resolve(address);
+      });
+    })
+    .then((address1) => {
+      return new Promise((resolve, reject) => {
+        dns.lookup(validationdomains[1], (err, address2, family) => {
+          if (err) reject(err);
+          else resolve([address1, address2]);
+        });
+      });
+    })
+    .then((addresses) => {
+      if (Array.isArray(addresses)) {
+        if (addresses[0] !== addresses[1])
+          return Promise.reject(`Ip-address doesn\'t match: ${addresses[0]}(${validationdomains[0]}) and ${addresses[1]}(${validationdomains[1]})`);
+      } else {
+        logger.log('error', 'Promise that was promised an array value didn\'t get an array as parameter for some reason.');
+      }
+    })
+    // Catch error 1, 2 or 3 if they exist.
+    .catch((dnserror) => {
       settings.adminUser.createDM().catch((err) => {
         logger.log('error', 'Failed to create dm channel with admin user.');
       }).then((dm) => {
-        dm.send('Hi ' + settings.adminUser.tag + '!');
+        dm.send('Hey ' + settings.adminUser.tag + '!\nIp validation failed with the following error: ' + dnserror);
       });
-    }
-  });
+    });
+  }
 }
 
 
