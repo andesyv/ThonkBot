@@ -30,6 +30,17 @@ function parseCommand(bot, cmd, args, message, logger) {
     cmd = cmd.toUpperCase(); // Convert to uppercase letters.
 
     switch(cmd) {
+        case 'HELP':
+        case 'HALP':
+        case '?':
+            fs.readFile(path.join(__dirname, './help.md'), 'utf8', (err, data) => {
+                if (err)
+                    logger.log('error', 'Failed to send help with error: ' + err);
+                else
+                    message.channel.send(data);
+            });
+            break;
+
         case 'BACHELOR':
         case 'BACHELORLEFT':
         case 'BACHELORTIMELEFT':
@@ -186,14 +197,14 @@ function getLastCommit (message, logger, args) {
             let amount = Number(args[0]);
             msg += `Last ${Number(args)} commits:\n`;
             for (let i = 0; i < amount && i < data.length; i++) {
-                msg += data[i].commit.message + '\nBy: ' + data[i].commit.author.name + '\nDate: ' + data[i].commit.author.date + '\nUrl: ' + data[i].html_url;
+                msg += data[i].commit.message + '\nBy: ' + data[i].commit.author.name + '\nDate: ' + data[i].commit.author.date + '\nUrl: <' + data[i].html_url + '>';
                 if (i !== amount.length - 1 || i !== data.length - 1) {
                     msg += '\n\n';
                 }
             }
             message.channel.send(msg);
         } else if (0 < data.length) {
-            message.channel.send('Last commit:\n' + data[0].commit.message + '\nBy: ' + data[0].commit.author.name + '\nDate: ' + data[0].commit.author.date + '\nUrl: ' + data[0].html_url);
+            message.channel.send('Last commit:\n' + data[0].commit.message + '\nBy: ' + data[0].commit.author.name + '\nDate: ' + data[0].commit.author.date + '\nUrl: <' + data[0].html_url + '>');
         } else {
             message.channel.send("Couldn't receive any commits.");
         }
