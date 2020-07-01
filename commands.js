@@ -197,6 +197,12 @@ function parseCommand(bot, cmd, args, message, logger) {
                 christmasThonk.secretSanta(message, logger);
             }
             break;
+        case 'SERVERCOUNT':
+        case 'SERVERS':
+        case 'GUILDCOUNT':
+        case 'GUILDS':
+            message.channel.send('As far as I know, I currently reside in ' + bot.guilds.cache.size + ' servers.');
+            break;
         default:
             break;
      }
