@@ -22,3 +22,4 @@ Commands are shown below in **bold** and aliases to commands are separated by co
 **patch, notes, new** *<count>* **:**  Sends the last commit made to the ThonkBot repository, or the last *count* commits if specified.
 **requests, todo:**  Shows a list of requests and wishes for features that should be added to ThonkBot.
 **request:**  Make a request for a feature that will be added to the *requests* list.
+**servercount, servers:**  Shows the current amount of servers ThonkBot is a part of.
