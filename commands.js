@@ -40,7 +40,23 @@ function parseCommand(bot, cmd, args, message, logger) {
                     message.channel.send(data);
             });
             break;
-
+        
+        case 'COMMANDS':
+        case 'CMDS':
+        case 'CMD':
+            message.channel.send('Full list of commands:\n\n' +
+                'help, halp, ?, commands, cmds, cmd, ' +
+                'bachelor, bachelorleft, bachelortimeleft, ' +
+                'pilot, pilotleft, think, thinking, thonk thonking, ' +
+                'randomthonk, randomthink, christmasname, christmas-name, ' +
+                'cat, cats, randomcat, cola, coke, cocacola, pepsi, nezuko, ' +
+                'anime, weeb, wholesome, pokemon, randompokemon, pikachu, ' +
+                'pikapika, ash, knock, knockknock, pepperkake, christmas, jul, ' +
+                'compliments, compliment, comp, kompliment, lotr, hobbit, ' +
+                'gandalf, hodor, got, movie, quote, patch, patchnotes, ' +
+                'notes, new, request, requests, todo, completerequest, ' +
+                'deleterequest, removerequest, secretsanta');
+            break;
         case 'BACHELOR':
         case 'BACHELORLEFT':
         case 'BACHELORTIMELEFT':
