@@ -4,3 +4,4 @@ auth.json
 package-lock.json
 ThonkTestBotAuthKey.txt
 settings.json
+*.sqlite
