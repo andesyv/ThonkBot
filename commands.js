@@ -7,8 +7,6 @@ const christmas = require('./christmas.json');
 const quotes = require('./quotes.json');
 const christmasThonk = require('./lib/thonkbot-christmas');
 const path = require('path');
-const SQLite = require("better-sqlite3");
-const sql = new SQLite('./points.sqlite');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -204,26 +202,6 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'GUILDCOUNT':
         case 'GUILDS':
             message.channel.send('As far as I know, I currently reside in ' + bot.guilds.cache.size + ' servers.');
-            break;
-        case 'POINT':
-            const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
-            if (!table['count(*)']) {
-                sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, points INTEGER);").run();
-                sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
-            }
-            let scoreObj = sql.prepare(`SELECT * FROM scores WHERE user = \'${message.author.tag}\'`).get();
-            if (!scoreObj) {
-                scoreObj = {
-                    id: message.author.id,
-                    user: message.author.tag,
-                    points: 0
-                };
-            }
-            scoreObj.points++;
-            setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, points) VALUES (@id, @user, @points);");
-            setScore.run(scoreObj);
-            message.channel.send(`Score is: ${scoreObj.points}`);
-            // client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
             break;
         default:
             break;
