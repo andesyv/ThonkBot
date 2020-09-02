@@ -20,10 +20,10 @@ it to a server where you have sufficient permissions.
  2. Create a new application *(if you don't have one ready already)*
  3. Attach a bot to your application
  4. Create a JSON file in the root directory of the repository called
- `auth.json`. 
+ **auth.json**. 
  5. Copy the bot token *(theres a reveal button and a copy 
- button at the bot page)* and paste it into the `auth.json` file under a 
- `token` attribute. Like this:
+ button at the bot page)* and paste it into the **auth.json** file under a 
+ **token** attribute. Like this:
 ```json
 {
     "token": "Your token here"
@@ -35,7 +35,7 @@ it to a server where you have sufficient permissions.
     - If the bot is missing a needed permission it will output an error when attempting to do an illegal action.
  8. Copy the generated link and use the link to add your bot to a server.
  9. Open a console in the root directory and run `npm install` in order to 
- install all needed packages specified in the `package.json` file.
+ install all needed packages specified in the **package.json** file.
  10. Finally run your application using `npm start` or `npm run start`.
 
 # Licencing
