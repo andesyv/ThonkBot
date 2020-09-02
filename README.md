@@ -39,4 +39,4 @@ it to a server where you have sufficient permissions.
  10. Finally run your application using `npm start` or `npm run start`.
 
 # Licencing
-The application is licenced under a standard [MIT licence](LICENCE)
+The application is licenced under a standard [MIT license](LICENSE)
