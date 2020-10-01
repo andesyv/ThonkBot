@@ -7,6 +7,8 @@ const christmas = require('./christmas.json');
 const quotes = require('./quotes.json');
 const christmasThonk = require('./lib/thonkbot-christmas');
 const path = require('path');
+const SQLite = require("better-sqlite3");
+const sql = new SQLite('./db.sqlite');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -203,9 +205,66 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'GUILDS':
             message.channel.send('As far as I know, I currently reside in ' + bot.guilds.cache.size + ' servers.');
             break;
+        case 'POINT':
+        case 'POINTS':
+            let pointsObj = getUserPoints(message.author);
+            updatePoints(pointsObj);
+            message.channel.send(`${message.author.tag} has ${pointsObj.points} sthonks:tm:.`);
+            break;
+        case 'GAMBLE':
+        case 'BET':
+            let p = getUserPoints(message.author);
+            if (p.points === 0)
+                message.channel.send(`You're broke!`);
+            else {
+                let amount = 0;
+                let arg = args[0];
+                if (arg)
+                    if (arg.toUpperCase() === "ALL")
+                        amount = p.points;
+                    else if (Number(arg))
+                        amount = Number(arg);
+                
+                if (!amount)
+                    message.channel.send(`You have to specify an amount to gamble.`);
+                else {
+                    let r = Math.round(Math.random() * 100);
+                    let factor = ((r / 100) * 2 - 1); // Convert from [0, 100] to [-1, 1]
+                    p.points = Math.max(p.points + Math.round(amount * factor), 0);
+                    updatePoints(p);
+                    message.channel.send(`${message.author.tag} rolled a ${r} and now has ${p.points} sthonks`);
+                }
+            }        
+            break;
         default:
             break;
      }
+}
+
+function updatePoints(obj) {
+    const setScore = sql.prepare("INSERT OR REPLACE INTO bank (id, user, points) VALUES (@id, @user, @points);");
+    setScore.run(obj);
+}
+
+function initTable() {
+    const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'bank';").get();
+    if (!table['count(*)']) {
+        sql.prepare("CREATE TABLE bank (id TEXT PRIMARY KEY, user TEXT, points INTEGER);").run();
+        sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON bank (id);").run();
+    }
+}
+
+function getUserPoints (user) {
+    initTable();
+    let obj = sql.prepare(`SELECT * FROM bank WHERE user = \'${user.tag}\'`).get();
+    if (!obj) {
+        obj = {
+            id: user.id,
+            user: user.tag,
+            points: 100
+        };
+    }
+    return obj;
 }
 
 function getLastCommit (message, logger, args) {
