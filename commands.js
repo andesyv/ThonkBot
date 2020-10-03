@@ -9,6 +9,7 @@ const christmasThonk = require('./lib/thonkbot-christmas');
 const path = require('path');
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./db.sqlite');
+const { DateTime, Duration } = require('luxon');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -208,7 +209,6 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'POINT':
         case 'POINTS':
             let pointsObj = getUserPoints(message.author);
-            updatePoints(pointsObj);
             message.channel.send(`${message.author.tag} has ${pointsObj.points} sthonks:tm:.`);
             break;
         case 'GAMBLE':
@@ -242,15 +242,29 @@ function parseCommand(bot, cmd, args, message, logger) {
 }
 
 function updatePoints(obj) {
-    const setScore = sql.prepare("INSERT OR REPLACE INTO bank (id, user, points) VALUES (@id, @user, @points);");
+    const setScore = sql.prepare("UPDATE bank SET points = @points WHERE id = @id;");
     setScore.run(obj);
 }
 
 function initTable() {
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'bank';").get();
     if (!table['count(*)']) {
-        sql.prepare("CREATE TABLE bank (id TEXT PRIMARY KEY, user TEXT, points INTEGER);").run();
+        sql.prepare(`CREATE TABLE bank (
+            bid INTEGER PRIMARY KEY,
+            id TEXT,
+            user TEXT,
+            points INTEGER
+        );`).run();
         sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON bank (id);").run();
+        sql.prepare(`CREATE TABLE metabank (
+            id INTEGER PRIMARY KEY,
+            bid INTEGER NO NULL,
+            lastupdated TEXT)`).run();
+        sql.prepare(`
+            CREATE TRIGGER recordtime AFTER UPDATE ON bank
+            BEGIN
+                UPDATE metabank SET lastupdated=datetime('now') WHERE bid = NEW.bid;
+            END;`).run();
     }
 }
 
@@ -263,6 +277,12 @@ function getUserPoints (user) {
             user: user.tag,
             points: 100
         };
+        sql.prepare(`INSERT INTO bank(id, user, points) VALUES (@id, @user, @points);`).run(obj);
+        sql.prepare(`INSERT INTO metabank(bid, lastupdated) VALUES ((SELECT bid FROM bank WHERE id = @id), datetime('now'));`).run(obj);
+    } else {
+        let sqltime = sql.prepare(`select lastupdated from metabank where bid = (select bid from bank where id = \'${obj.id}\');`).get().lastupdated;
+        let accessed = DateTime.fromSQL(sqltime, { zone: 'utc' });
+        obj.points += Math.floor(Duration.fromMillis(DateTime.local() - accessed).as("minute"));
     }
     return obj;
 }
