@@ -230,11 +230,11 @@ function parseCommand(bot, cmd, args, message, logger) {
                 else {
                     let r = Math.round(Math.random() * 100);
                     let factor = ((r / 100) * 2 - 1); // Convert from [0, 100] to [-1, 1]
-                    p.points = Math.max(p.points + Math.round(amount * factor), 0);
+                    p.points = Math.max(p.points + Math.round(Math.pow(amount, 2) * factor), 0);
                     updatePoints(p);
-                    message.channel.send(`${message.author.tag} rolled a ${r} and now has ${p.points} sthonks`);
+                    message.channel.send(`${message.author.tag} bet **${amount}** sthonks, rolled a **${r}**, and now has **${p.points}** sthonks.`);
                 }
-            }        
+            }
             break;
         default:
             break;
