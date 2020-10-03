@@ -379,7 +379,7 @@ function getRequests (message, logger) {
 }
 
 function sendManySpooks (message, logger) {
-    let readDir = path.join(__dirname, 'Spooks');
+    let readDir = path.join(__dirname, 'Spooks/');
     let spookList = [];
     let files = fs.readdirSync(readDir);
 
@@ -389,7 +389,7 @@ function sendManySpooks (message, logger) {
 
         var messageSize = 0;
         files.forEach((file) => {
-            let fileSize = fs.statSync(readDir + file).size;
+            let fileSize = fs.statSync(path.join(readDir, file)).size;
 
             if (messageSize + fileSize < 8 * 1024 * 1024 && spookList.length < 10)
             {
