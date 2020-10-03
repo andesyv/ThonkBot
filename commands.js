@@ -86,7 +86,6 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'RANDOMTHINK':
             sendRandomFile(message, path.join(__dirname, 'ThonkEmojis'), logger);
             break;
-        /* Spooktober is over. :/
         case 'SPOOK':
         case 'RANDOMSPOOK':
             if (message.mentions.users.size > 0)
@@ -98,7 +97,6 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'ALLSPOOKS':
             sendManySpooks(message, logger);
             break;
-        */
         case 'CHRISTMASNAME':
         case 'CHRISTMAS-NAME':
             if (message.channel instanceof Discord.TextChannel) {
