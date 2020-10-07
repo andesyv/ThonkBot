@@ -247,7 +247,7 @@ function parseCommand(bot, cmd, args, message, logger) {
 
 function getLeaderboards(guild) {
     let guilds = sql
-        .prepare(`SELECT * FROM bank WHERE id IN (SELECT id FROM guilds WHERE gid = ?) LIMIT 10`)
+        .prepare(`SELECT * FROM bank WHERE id IN (SELECT uid FROM guilds WHERE gid = ?) LIMIT 10`)
         .all(guild.id)
         .map(p => currentPoints(p));
     if (0 < guilds.length) {
