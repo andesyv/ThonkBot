@@ -32,6 +32,8 @@ exports.runCommand = function (bot, message, logger) {
 function parseCommand(bot, cmd, args, message, logger) {
     cmd = cmd.toUpperCase(); // Convert to uppercase letters.
 
+    let guild = (message.channel instanceof Discord.TextChannel && message.channel.guild.available) ? message.channel.guild : null;
+
     switch(cmd) {
         case 'HELP':
         case 'HALP':
@@ -206,12 +208,13 @@ function parseCommand(bot, cmd, args, message, logger) {
             break;
         case 'POINT':
         case 'POINTS':
-            let pointsObj = getUserPoints(message.author);
+        case 'STHONKS':
+            let pointsObj = getUserPoints(message.author, guild);
             message.channel.send(`${message.author.tag} has ${pointsObj.points} sthonks:tm:.`);
             break;
         case 'GAMBLE':
         case 'BET':
-            let p = getUserPoints(message.author);
+            let p = getUserPoints(message.author, guild);
             if (p.points === 0)
                 message.channel.send(`You're broke!`);
             else {
@@ -234,9 +237,32 @@ function parseCommand(bot, cmd, args, message, logger) {
                 }
             }
             break;
+        case 'RANK':
+            message.channel.send(getLeaderboards(guild));
+            break;
         default:
             break;
      }
+}
+
+function getLeaderboards(guild) {
+    let guilds = sql
+        .prepare(`SELECT * FROM bank WHERE id IN (SELECT id FROM guilds WHERE gid = ?) LIMIT 10`)
+        .all(guild.id)
+        .map(p => currentPoints(p));
+    if (0 < guilds.length) {
+        let longestName = guilds[0].user.length;
+        if (1 < guilds.length) {
+            guilds = guilds.sort((a, b) => b.points - a.points);
+            longestName = guilds.reduce(function (a, b) { return a.user.length > b.user.length ? a : b; });
+        }
+        return guilds
+            .map((p, i) => {
+                return `${i + 1}. \t \`${p.user}\` ${" ".repeat(longestName - p.user.length)}\t (**${p.points}** sthonks)`;
+            })
+            .join('\n');
+    } else
+        return "There's no leaderboard. :(";
 }
 
 function updatePoints(obj) {
@@ -244,30 +270,38 @@ function updatePoints(obj) {
     setScore.run(obj);
 }
 
-function initTable() {
-    const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'bank';").get();
-    if (!table['count(*)']) {
-        sql.prepare(`CREATE TABLE bank (
-            bid INTEGER PRIMARY KEY,
-            id TEXT,
-            user TEXT,
-            points INTEGER
-        );`).run();
-        sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON bank (id);").run();
-        sql.prepare(`CREATE TABLE metabank (
-            id INTEGER PRIMARY KEY,
-            bid INTEGER NO NULL,
-            lastupdated TEXT)`).run();
-        sql.prepare(`
-            CREATE TRIGGER recordtime AFTER UPDATE ON bank
-            BEGIN
-                UPDATE metabank SET lastupdated=datetime('now') WHERE bid = NEW.bid;
-            END;`).run();
-    }
+exports.initTable = function() {
+    sql.prepare(`CREATE TABLE IF NOT EXISTS bank (
+        bid INTEGER PRIMARY KEY,
+        id TEXT,
+        user TEXT,
+        points INTEGER
+    );`).run();
+    sql.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_scores_id ON bank (id);").run();
+    sql.prepare(`CREATE TABLE IF NOT EXISTS metabank (
+        id INTEGER PRIMARY KEY,
+        bid INTEGER NO NULL,
+        lastupdated TEXT)`).run();
+    sql.prepare(`
+        CREATE TRIGGER IF NOT EXISTS recordtime AFTER UPDATE ON bank
+        BEGIN
+            UPDATE metabank SET lastupdated=datetime('now') WHERE bid = NEW.bid;
+        END;`).run();
+    sql.prepare(`
+        CREATE TABLE IF NOT EXISTS guilds (
+        gid TEXT,
+        uid TEXT,
+        PRIMARY KEY (gid, uid))`).run();
 }
 
-function getUserPoints (user) {
-    initTable();
+function currentPoints(pointsObj) {
+    let sqltime = sql.prepare(`select lastupdated from metabank where bid = (select bid from bank where id = ?);`).get(pointsObj.id).lastupdated;
+    let accessed = DateTime.fromSQL(sqltime, { zone: 'utc' });
+    pointsObj.points += Math.floor(Duration.fromMillis(DateTime.local() - accessed).as("minute"));
+    return pointsObj;
+}
+
+function getUserPoints (user, guild) {
     let obj = sql.prepare(`SELECT * FROM bank WHERE user = \'${user.tag}\'`).get();
     if (!obj) {
         obj = {
@@ -278,10 +312,11 @@ function getUserPoints (user) {
         sql.prepare(`INSERT INTO bank(id, user, points) VALUES (@id, @user, @points);`).run(obj);
         sql.prepare(`INSERT INTO metabank(bid, lastupdated) VALUES ((SELECT bid FROM bank WHERE id = @id), datetime('now'));`).run(obj);
     } else {
-        let sqltime = sql.prepare(`select lastupdated from metabank where bid = (select bid from bank where id = \'${obj.id}\');`).get().lastupdated;
-        let accessed = DateTime.fromSQL(sqltime, { zone: 'utc' });
-        obj.points += Math.floor(Duration.fromMillis(DateTime.local() - accessed).as("minute"));
+        obj = currentPoints(obj);
     }
+    if (guild)
+        if (!sql.prepare(`SELECT * FROM guilds WHERE uid = ${obj.id} AND gid = ${guild.id};`).get())
+            sql.prepare(`INSERT INTO guilds(gid, uid) VALUES (${guild.id}, ${obj.id});`).run();
     return obj;
 }
 

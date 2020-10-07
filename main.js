@@ -64,6 +64,7 @@ exports.init = function()
       logger.log('info', 'Connected');
       logger.log('info', 'Logged in as: ' + bot.user.tag + ' - (' + bot.user.id + ')');
       initSettings(logger, bot);
+      commands.initTable();
     });
 
     bot.on('message', function (message) {
