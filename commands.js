@@ -238,7 +238,12 @@ function parseCommand(bot, cmd, args, message, logger) {
             }
             break;
         case 'RANK':
+        case 'LEADERBOARDS':
             message.channel.send(getLeaderboards(guild));
+            break;
+        case 'GIVE':
+        case 'GIVEPOINTS':
+            givePoints(message, args, guild);
             break;
         default:
             break;
@@ -263,6 +268,25 @@ function getLeaderboards(guild) {
             .join('\n');
     } else
         return "There's no leaderboard. :(";
+}
+
+function givePoints(message, args, guild) {
+    const mentioned = message.mentions.users.first();
+    if (mentioned) {
+        let amount = Number(args[1]);
+        let p1 = getUserPoints(message.author, guild);
+        let p2 = getUserPoints(mentioned, guild);
+        if (p1 && p2 && !isNaN(amount) && 0 < amount) {
+            amount = Math.min(amount, p1.points);
+            p1.points -= amount;
+            p2.points += amount;
+            updatePoints(p1);
+            updatePoints(p2);
+
+            message.channel.send(`${message.author.tag} gave ${mentioned.tag} ${amount} points. :o`);
+            return;
+        }
+    }
 }
 
 function updatePoints(obj) {
