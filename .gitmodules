@@ -1,6 +1,0 @@
-[submodule "lib/discord.io"]
-	path = lib/discord.io
-	url = https://github.com/izy521/discord.io
-[submodule "lib/winston"]
-	path = lib/winston
-	url = https://github.com/winstonjs/winston

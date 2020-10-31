@@ -5,7 +5,11 @@ const jokes = require('./jokes.json');
 const compliments = require('./compliments.json');
 const christmas = require('./christmas.json');
 const quotes = require('./quotes.json');
-// const christmasThonk = require('./lib/thonkbot-christmas');
+const christmasThonk = require('./lib/thonkbot-christmas');
+const path = require('path');
+const SQLite = require("better-sqlite3");
+const sql = new SQLite('./db.sqlite');
+const { DateTime, Duration } = require('luxon');
 
 // Converts the message to a command and runs it.
 exports.runCommand = function (bot, message, logger) {
@@ -28,7 +32,48 @@ exports.runCommand = function (bot, message, logger) {
 function parseCommand(bot, cmd, args, message, logger) {
     cmd = cmd.toUpperCase(); // Convert to uppercase letters.
 
+    let guild = (message.channel instanceof Discord.TextChannel && message.channel.guild.available) ? message.channel.guild : null;
+
     switch(cmd) {
+        case 'HELP':
+        case 'HALP':
+        case '?':
+            fs.readFile(path.join(__dirname, './help.md'), 'utf8', (err, data) => {
+                if (err)
+                    logger.log('error', 'Failed to send help with error: ' + err);
+                else
+                    message.channel.send(data);
+            });
+            break;
+        
+        case 'COMMANDS':
+        case 'CMDS':
+        case 'CMD':
+            message.channel.send('Full list of commands:\n\n' +
+                'help, halp, ?, commands, cmds, cmd, ' +
+                'bachelor, bachelorleft, bachelortimeleft, ' +
+                'pilot, pilotleft, think, thinking, thonk thonking, ' +
+                'randomthonk, randomthink, christmasname, christmas-name, ' +
+                'cat, cats, randomcat, cola, coke, cocacola, pepsi, nezuko, ' +
+                'anime, weeb, wholesome, pokemon, randompokemon, pikachu, ' +
+                'pikapika, ash, knock, knockknock, pepperkake, christmas, jul, ' +
+                'compliments, compliment, comp, kompliment, lotr, hobbit, ' +
+                'gandalf, hodor, got, movie, quote, patch, patchnotes, ' +
+                'notes, new, request, requests, todo, completerequest, ' +
+                'deleterequest, removerequest, secretsanta');
+            break;
+        case 'BACHELOR':
+        case 'BACHELORLEFT':
+        case 'BACHELORTIMELEFT':
+        case 'PILOT':
+        case 'PILOTLEFT':
+            {
+            let p = percentageTowardsDate(new Date('Jan 6, 2020 9:00:00'), new Date('May 20, 2020 12:00:00'));
+            let before = p <= 100;
+            message.channel.send(`Time ` + (before ? 'left until' : 'since') + ` bachelor deadline: ${timeLeft(new Date('May 20, 2020 12:00:00'), before)}\n` +
+            (before ? `Percentage: ${p.toFixed(2)}%` : `You're done! :o`));
+            }
+            break;
         // !think
         case 'THINK':
         case 'THINKING':
@@ -37,86 +82,79 @@ function parseCommand(bot, cmd, args, message, logger) {
         // !thonk
         case 'THONK':
         case 'THONKING':
-            message.channel.send(new Discord.Attachment('./ThonkEmojis/thonk.png'));
+            message.channel.send(new Discord.MessageAttachment(path.join(__dirname, 'ThonkEmojis', 'thonk.png')));
             break;
         case 'RANDOMTHONK':
         case 'RANDOMTHINK':
-            sendRandomFile(message, './ThonkEmojis/', logger);
+            sendRandomFile(message, path.join(__dirname, 'ThonkEmojis'), logger);
             break;
         case 'SPOOK':
         case 'RANDOMSPOOK':
             if (message.mentions.users.size > 0)
-                sendPersonalSpook(message, './Spooks/', logger);
+                sendPersonalSpook(message, path.join(__dirname, 'Spooks'), logger);
             else
-                sendRandomFile(message, './Spooks/', logger);
+                sendRandomFile(message, path.join(__dirname, 'Spooks'), logger);
             break;
         case 'MANYSPOOKS':
         case 'ALLSPOOKS':
             sendManySpooks(message, logger);
             break;
-        /* Christmas is over
         case 'CHRISTMASNAME':
         case 'CHRISTMAS-NAME':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.christmasName(message, logger);
             }
             break;
-        */
         case 'CAT':
         case 'CATS':
         case 'RANDOMCAT':
-            sendRandomFile(message, './Cats/', logger);
+            sendRandomFile(message, path.join(__dirname, 'Cats'), logger);
             break;
         case 'COLA':
         case 'COKE':
         case 'COCACOLA':
         case 'PEPSI':
-            sendRandomFile(message, './Coke/', logger);
+            sendRandomFile(message, path.join(__dirname, 'Coke'), logger);
             break;
         case 'NEZUKO':
         case 'ANIME':
         case 'WEEB':
         case 'WHOLESOME':
-            sendRandomFile(message, './Anime/', logger);
+            sendRandomFile(message, path.join(__dirname, 'Anime'), logger);
             break;
         case 'POKEMON':
         case 'RANDOMPOKEMON':
         case 'PIKACHU':
         case 'PIKAPIKA':
         case 'ASH':
-            sendRandomFile(message, './Pokemon/', logger);
+            sendRandomFile(message, path.join(__dirname, 'Pokemon'), logger);
             break;
         case 'KNOCK':
         case 'KNOCKKNOCK':
             message.channel.send(jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]);
             break;
-        /* Christmas is over
         case 'PEPPERKAKE':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.sendPepperkake(message, logger);
             }
             break;
-        */
-        /*
         case 'CHRISTMAS':
         case 'JUL':
-        if (message.mentions.users.size > 0)
-            sendPersonalChristmasGreeting(message, logger);
-        else
-              message.channel.send(christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]);
+            if (message.mentions.users.size > 0)
+                sendPersonalChristmasGreeting(message, logger);
+            else
+                  message.channel.send(christmas.Christmas[Math.floor(Math.random() * christmas.Christmas.length)]);
 
-        break;*/
-
+            break;
         case 'COMPLIMENTS':
         case 'COMPLIMENT':
         case 'COMP':
         case 'KOMPLIMENT':
-
-        if (message.mentions.users.size > 0)
-            sendPersonalCompliment(message, logger);
-        else
-              message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
-        break;
+            if (message.mentions.users.size > 0)
+                sendPersonalCompliment(message, logger);
+            else
+                  message.channel.send(compliments.Compliments[Math.floor(Math.random() * compliments.Compliments.length)]);
+            break;
 // ... Quotes from movies and tv-show
         case 'LOTR':
         case 'HOBBIT':
@@ -141,7 +179,7 @@ function parseCommand(bot, cmd, args, message, logger) {
             getLastCommit(message, logger, args);
             break;
         case 'REQUEST':
-            fs.appendFile('requests.txt', message.content.slice(cmd.length + 2) + '\n', (err) => {
+            fs.appendFile(path.join(__dirname, 'requests.txt'), message.content.slice(cmd.length + 2) + '\n', (err) => {
                 if (err) {
                     throw err;
                 }
@@ -157,17 +195,153 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'REMOVEREQUEST':
             removeRequest(message, args, logger);
             break;
-
-        /* Christmas is over
         case 'SECRETSANTA':
             if (message.channel instanceof Discord.TextChannel) {
                 christmasThonk.secretSanta(message, logger);
             }
             break;
-        */
+        case 'SERVERCOUNT':
+        case 'SERVERS':
+        case 'GUILDCOUNT':
+        case 'GUILDS':
+            message.channel.send('As far as I know, I currently reside in ' + bot.guilds.cache.size + ' servers.');
+            break;
+        case 'POINT':
+        case 'POINTS':
+        case 'STHONKS':
+            let pointsObj = getUserPoints(message.author, guild);
+            message.channel.send(`${message.author.tag} has ${pointsObj.points} sthonks:tm:.`);
+            break;
+        case 'GAMBLE':
+        case 'BET':
+            let p = getUserPoints(message.author, guild);
+            if (p.points === 0)
+                message.channel.send(`You're broke!`);
+            else {
+                let amount = 0;
+                let arg = args[0];
+                if (arg)
+                    if (arg.toUpperCase() === "ALL")
+                        amount = p.points;
+                    else if (Number(arg))
+                        amount = Number(arg);
+                
+                if (!amount)
+                    message.channel.send(`You have to specify an amount to gamble.`);
+                else {
+                    let r = Math.round(Math.random() * 100);
+                    let factor = ((r / 100) * 2 - 1); // Convert from [0, 100] to [-1, 1]
+                    p.points = Math.max(p.points + Math.round(Math.pow(amount, 2) * factor), 0);
+                    updatePoints(p);
+                    message.channel.send(`${message.author.tag} bet **${amount}** sthonks, rolled a **${r}**, and now has **${p.points}** sthonks.`);
+                }
+            }
+            break;
+        case 'RANK':
+        case 'LEADERBOARDS':
+            message.channel.send(getLeaderboards(guild));
+            break;
+        case 'GIVE':
+        case 'GIVEPOINTS':
+            givePoints(message, args, guild);
+            break;
         default:
             break;
      }
+}
+
+function getLeaderboards(guild) {
+    let guilds = sql
+        .prepare(`SELECT * FROM bank WHERE id IN (SELECT uid FROM guilds WHERE gid = ?) LIMIT 10`)
+        .all(guild.id)
+        .map(p => currentPoints(p));
+    if (0 < guilds.length) {
+        let longestName = guilds[0].user.length;
+        if (1 < guilds.length) {
+            guilds = guilds.sort((a, b) => b.points - a.points);
+            longestName = guilds.reduce(function (a, b) { return a.user.length > b.user.length ? a : b; });
+        }
+        return guilds
+            .map((p, i) => {
+                return `${i + 1}. \t \`${p.user}\` ${" ".repeat(longestName - p.user.length)}\t (**${p.points}** sthonks)`;
+            })
+            .join('\n');
+    } else
+        return "There's no leaderboard. :(";
+}
+
+function givePoints(message, args, guild) {
+    const mentioned = message.mentions.users.first();
+    if (mentioned) {
+        let amount = Number(args[1]);
+        let p1 = getUserPoints(message.author, guild);
+        let p2 = getUserPoints(mentioned, guild);
+        if (p1 && p2 && !isNaN(amount) && 0 < amount) {
+            amount = Math.min(amount, p1.points);
+            p1.points -= amount;
+            p2.points += amount;
+            updatePoints(p1);
+            updatePoints(p2);
+
+            message.channel.send(`${message.author.tag} gave ${mentioned.tag} ${amount} points. :o`);
+            return;
+        }
+    }
+}
+
+function updatePoints(obj) {
+    const setScore = sql.prepare("UPDATE bank SET points = @points WHERE id = @id;");
+    setScore.run(obj);
+}
+
+exports.initTable = function() {
+    sql.prepare(`CREATE TABLE IF NOT EXISTS bank (
+        bid INTEGER PRIMARY KEY,
+        id TEXT,
+        user TEXT,
+        points INTEGER
+    );`).run();
+    sql.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_scores_id ON bank (id);").run();
+    sql.prepare(`CREATE TABLE IF NOT EXISTS metabank (
+        id INTEGER PRIMARY KEY,
+        bid INTEGER NO NULL,
+        lastupdated TEXT)`).run();
+    sql.prepare(`
+        CREATE TRIGGER IF NOT EXISTS recordtime AFTER UPDATE ON bank
+        BEGIN
+            UPDATE metabank SET lastupdated=datetime('now') WHERE bid = NEW.bid;
+        END;`).run();
+    sql.prepare(`
+        CREATE TABLE IF NOT EXISTS guilds (
+        gid TEXT,
+        uid TEXT,
+        PRIMARY KEY (gid, uid))`).run();
+}
+
+function currentPoints(pointsObj) {
+    let sqltime = sql.prepare(`select lastupdated from metabank where bid = (select bid from bank where id = ?);`).get(pointsObj.id).lastupdated;
+    let accessed = DateTime.fromSQL(sqltime, { zone: 'utc' });
+    pointsObj.points += Math.floor(Duration.fromMillis(DateTime.local() - accessed).as("minute"));
+    return pointsObj;
+}
+
+function getUserPoints (user, guild) {
+    let obj = sql.prepare(`SELECT * FROM bank WHERE user = \'${user.tag}\'`).get();
+    if (!obj) {
+        obj = {
+            id: user.id,
+            user: user.tag,
+            points: 100
+        };
+        sql.prepare(`INSERT INTO bank(id, user, points) VALUES (@id, @user, @points);`).run(obj);
+        sql.prepare(`INSERT INTO metabank(bid, lastupdated) VALUES ((SELECT bid FROM bank WHERE id = @id), datetime('now'));`).run(obj);
+    } else {
+        obj = currentPoints(obj);
+    }
+    if (guild)
+        if (!sql.prepare(`SELECT * FROM guilds WHERE uid = ${obj.id} AND gid = ${guild.id};`).get())
+            sql.prepare(`INSERT INTO guilds(gid, uid) VALUES (${guild.id}, ${obj.id});`).run();
+    return obj;
 }
 
 function getLastCommit (message, logger, args) {
@@ -181,14 +355,14 @@ function getLastCommit (message, logger, args) {
             let amount = Number(args[0]);
             msg += `Last ${Number(args)} commits:\n`;
             for (let i = 0; i < amount && i < data.length; i++) {
-                msg += data[i].commit.message + '\nBy: ' + data[i].commit.author.name + '\nDate: ' + data[i].commit.author.date + '\nUrl: ' + data[i].html_url;
+                msg += data[i].commit.message + '\nBy: ' + data[i].commit.author.name + '\nDate: ' + data[i].commit.author.date + '\nUrl: <' + data[i].html_url + '>';
                 if (i !== amount.length - 1 || i !== data.length - 1) {
                     msg += '\n\n';
                 }
             }
             message.channel.send(msg);
         } else if (0 < data.length) {
-            message.channel.send('Last commit:\n' + data[0].commit.message + '\nBy: ' + data[0].commit.author.name + '\nDate: ' + data[0].commit.author.date + '\nUrl: ' + data[0].html_url);
+            message.channel.send('Last commit:\n' + data[0].commit.message + '\nBy: ' + data[0].commit.author.name + '\nDate: ' + data[0].commit.author.date + '\nUrl: <' + data[0].html_url + '>');
         } else {
             message.channel.send("Couldn't receive any commits.");
         }
@@ -197,7 +371,7 @@ function getLastCommit (message, logger, args) {
 
 function removeRequest (message, args, logger) {
     if (0 < args.length && !isNaN(args[0])) {
-        fs.readFile('requests.txt', 'utf8', (err, data) => {
+        fs.readFile(path.join(__dirname, 'requests.txt'), 'utf8', (err, data) => {
             if (err) {
                 message.channel.send('There are no requests.');
                 logger.log('info', "Didn't remove file because: " + err.message);
@@ -216,7 +390,7 @@ function removeRequest (message, args, logger) {
                         newContents += contents[i] + '\n';
                 }
                 if (newContents === '') {
-                    fs.unlink('requests.txt', (err) => {
+                    fs.unlink(path.join(__dirname, 'requests.txt'), (err) => {
                         if (err) {
                             logger.log('error', err.message);
                             throw err;
@@ -225,7 +399,7 @@ function removeRequest (message, args, logger) {
                         message.channel.send('Done!');
                     });
                 } else {
-                    fs.writeFile('requests.txt', newContents, 'utf8', (err) => {
+                    fs.writeFile(path.join(__dirname, 'requests.txt'), newContents, 'utf8', (err) => {
                         if (err) {
                             logger.log('error', err.message);
                             throw err;
@@ -242,7 +416,7 @@ function removeRequest (message, args, logger) {
 }
 
 function getRequests (message, logger) {
-    fs.readFile('requests.txt', 'utf8', (err, data) => {
+    fs.readFile(path.join(__dirname, 'requests.txt'), 'utf8', (err, data) => {
         if (err) {
             message.channel.send('There are no requests at the moment.');
             logger.log('info', "Didn't read file because: " + err.message);
@@ -264,7 +438,7 @@ function getRequests (message, logger) {
 }
 
 function sendManySpooks (message, logger) {
-    let readDir = './Spooks/';
+    let readDir = path.join(__dirname, 'Spooks/');
     let spookList = [];
     let files = fs.readdirSync(readDir);
 
@@ -274,7 +448,7 @@ function sendManySpooks (message, logger) {
 
         var messageSize = 0;
         files.forEach((file) => {
-            let fileSize = fs.statSync(readDir + file).size;
+            let fileSize = fs.statSync(path.join(readDir, file)).size;
 
             if (messageSize + fileSize < 8 * 1024 * 1024 && spookList.length < 10)
             {
@@ -299,7 +473,7 @@ function sendManySpooks (message, logger) {
 function sendRandomFile(message, folder, logger) {
     let file = getRandomFile(folder);
     if (typeof file == "string") {
-        message.channel.send(new Discord.Attachment(folder + file));
+        message.channel.send(new Discord.MessageAttachment(path.join(folder, file)));
     } else {
         logger.log('error', 'Cannot find random file in ' + folder);
     }
@@ -339,7 +513,7 @@ function getRandomFile(folder) {
          let file = getRandomFile(folder);
          if (typeof file == "string") {
              value.send(`You've been spooked by ${message.author.tag}!`,
-             new Discord.Attachment(folder + file));
+             new Discord.MessageAttachment(folder + file));
          } else {
              logger.log('error', 'Cannot find random file in ' + folder);
          }
@@ -376,4 +550,34 @@ function sendPersonalCompliment(message, logger){
     }).catch(() => {
         logger.log('error', `Failed to create dm channel with user ${mentioned.tag} on textChannel ${message.channel.name}`);
     });
+}
+
+function timeLeft(date, before = true){
+    if (date instanceof Date){
+        let inMs = {};
+        inMs.second = 1000;
+        inMs.min = inMs.second * 60;
+        inMs.hour = inMs.min * 60;
+        inMs.day = inMs.hour * 24;
+
+        let now = Date.now();
+        let left = before ? (date - now) : (now - date);
+        let days = Math.floor(left / inMs.day),
+            hours = Math.floor((left % inMs.day) / inMs.hour),
+            mins = Math.floor((left % inMs.day % inMs.hour) / inMs.min),
+            seconds = Math.floor((left % inMs.day % inMs.hour % inMs.min) / inMs.second);
+
+        return `${days} days, ${hours} hours, ${mins} mins, ${seconds} seconds left`;
+    }
+    return null;
+}
+
+function percentageTowardsDate(from, to){
+    if (from instanceof Date && to instanceof Date){
+        let now = Date.now();
+        let passed = now - from;
+        let percentage = passed / (to - from);
+        return percentage * 100;
+    }
+    return null;
 }
