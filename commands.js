@@ -129,6 +129,9 @@ function parseCommand(bot, cmd, args, message, logger) {
         case 'ASH':
             sendRandomFile(message, path.join(__dirname, 'Pokemon'), logger);
             break;
+        case 'BIRD':
+            sendRandomFile(message, path.join(__dirname, 'Bird'), logger);
+            break;
         case 'KNOCK':
         case 'KNOCKKNOCK':
             message.channel.send(jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]);
