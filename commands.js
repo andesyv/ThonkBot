@@ -339,8 +339,10 @@ function getUserPoints (user, guild) {
         sql.prepare(`INSERT INTO bank(id, user, points) VALUES (@id, @user, @points);`).run(obj);
         sql.prepare(`INSERT INTO metabank(bid, lastupdated) VALUES ((SELECT bid FROM bank WHERE id = @id), datetime('now'));`).run(obj);
     } else {
-        if (user.tag != obj.user)
+        if (user.tag != obj.user) {
+            obj.user = user.tag;
             sql.prepare(`UPDATE bank SET user = @user WHERE id = @id`).run(obj);
+        }
         obj = currentPoints(obj);
     }
     if (guild)
