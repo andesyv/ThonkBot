@@ -276,8 +276,8 @@ function getLeaderboards(guild) {
 function givePoints(message, args, guild) {
     const mentioned = message.mentions.users.first();
     if (mentioned) {
-        let amount = Number(args[1]);
         let p1 = getUserPoints(message.author, guild);
+        let amount = args[1].toUpperCase() == 'ALL' ? p1.points : Number(args[1]);
         let p2 = getUserPoints(mentioned, guild);
         if (p1 && p2 && !isNaN(amount) && 0 < amount) {
             amount = Math.min(amount, p1.points);
