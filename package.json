@@ -1,5 +1,5 @@
 {
-  "name": "ThonkBot",
+  "name": "thonkbot",
   "version": "2.0.0",
   "description": "A thonky discord bot",
   "main": "./src/main.js",
@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "ts-node src/main.ts",
-    "deploy": "tsc && node build/main.js",
+    "deploy": "tsc && node dist/src/main.js",
     "lint": "eslint"
   },
   "dependencies": {

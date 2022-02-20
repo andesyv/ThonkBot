@@ -1,12 +1,17 @@
 import { Client, Intents } from 'discord.js';
-import winston, { loggers } from 'winston';
+import winston from 'winston';
 import { token, clientId, guildId } from './../config.json';
-import { SlashCommandBuilder } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { readdir } from 'fs/promises';
 import * as path from 'path';
-import { BaseCommand, CommandApiConstructor, ICommandBase } from './command';
+import {
+  ICommandBase,
+  IMessageCommand,
+  ISlashCommand,
+  isMessageCommand,
+  isSlashCommand
+} from './command';
 
 const init = async () => {
   // Initialize logger
@@ -57,43 +62,44 @@ const init = async () => {
     );
   });
 
+  // Interaction registration:
+  const commands = await loadCommands(logger);
+  const interactionCommands = commands.filter((c) => isSlashCommand(c));
+
+  const rest = new REST({ version: '9' }).setToken(token);
+  await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+    body: interactionCommands.map((c) => c.data.toJSON())
+  });
+  logger.log('info', 'Successfully registered application commands.');
+
   // Message handling (for old command format)
-  client.on('messageCreate', (message) => {
+  client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
     logger.log('info', 'Received message');
     message.channel.send('Message received!');
+
+    for (const command of commands) {
+      if (isMessageCommand(command)) {
+        await command.handleMessage(message, client, logger);
+        return;
+      }
+    }
   });
-
-  // Interaction registration:
-  const commands = (await loadCommands(logger)).map((c) => c.toJSON());
-
-  // const cmd1 = new SlashCommandBuilder()
-  //   .setName('ping')
-  //   .setDescription('Replies with pong!');
-
-  // const commands = [cmd1].map((command) => command.toJSON());
-
-  const rest = new REST({ version: '9' }).setToken(token);
-
-  rest
-    .put(Routes.applicationGuildCommands(clientId, guildId), {
-      body: commands
-    })
-    .then(() =>
-      logger.log('info', 'Successfully registered application commands.')
-    )
-    .catch((e) => logger.log('error', e));
 
   // Interaction handling (new command system)
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
 
-    const { commandName } = interaction;
-
     logger.log('info', 'Received interaction');
-    if (commandName === 'ping') {
-      await interaction.reply('Pong!');
+    for (const command of interactionCommands) {
+      if (
+        isSlashCommand(command) &&
+        command.data.name === interaction.commandName
+      ) {
+        await command.handleInteraction(interaction, client, logger);
+        return;
+      }
     }
   });
 
@@ -101,17 +107,17 @@ const init = async () => {
   client.login(token);
 };
 
-const loadCommands = async (
-  logger: winston.Logger
-): Promise<ICommandBase[]> => {
+type CommandType =
+  | ICommandBase
+  | (ICommandBase & IMessageCommand)
+  | (ICommandBase & IMessageCommand & ISlashCommand);
+
+const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
   const commandNames = await readdir(path.join(__dirname, 'commands'));
   return Promise.all(
-    commandNames.map(async (name): Promise<ICommandBase> => {
+    commandNames.map(async (name): Promise<CommandType> => {
       logger.log('info', `Name is ${name}`);
-      const { default: Command } = (await import(
-        `./commands/${name}`
-      )) as CommandApiConstructor;
-      return new Command();
+      return (await import(`./commands/${name}`)).default;
     })
   );
 };

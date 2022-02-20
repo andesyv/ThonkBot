@@ -3,14 +3,11 @@
  */
 
 import { SlashCommandBuilder } from '@discordjs/builders';
-import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v9';
 import { Client, CommandInteraction, Message } from 'discord.js';
 import { Logger } from 'winston';
 
 export interface ICommandBase {
-  builder: SlashCommandBuilder;
-  getName(): string;
-  toJSON(): RESTPostAPIApplicationCommandsJSONBody;
+  data: SlashCommandBuilder;
 }
 
 export interface ISlashCommand {
@@ -29,43 +26,20 @@ export interface IMessageCommand {
   ): Promise<unknown>;
 }
 
-export type CommandApiConstructor = { default: { new (): ICommandBase } };
-
-export abstract class BaseCommand implements ICommandBase {
-  public abstract builder: SlashCommandBuilder;
-
-  getName(): string {
-    return this.builder.name.toLowerCase();
-  }
-
-  public toJSON(): RESTPostAPIApplicationCommandsJSONBody {
-    return this.builder.toJSON();
-  }
+// https://stackoverflow.com/questions/49707327/typescript-check-if-property-in-object-in-typesafe-way
+function hasOwnProperty<T, K extends PropertyKey>(
+  obj: T,
+  prop: K
+): obj is T & Record<K, unknown> {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-export abstract class MessageCommand
-  extends BaseCommand
-  implements IMessageCommand
-{
-  public abstract handleMessage(
-    message: Message,
-    client: Client,
-    logger: Logger
-  ): Promise<unknown>;
-}
+export const isSlashCommand = (
+  cmd: ICommandBase
+): cmd is ICommandBase & ISlashCommand =>
+  hasOwnProperty(cmd, 'handleInteraction');
 
-export abstract class FullCommand
-  extends BaseCommand
-  implements ISlashCommand, IMessageCommand
-{
-  public abstract handleInteraction(
-    interaction: CommandInteraction,
-    client: Client,
-    logger: Logger
-  ): Promise<unknown>;
-  public abstract handleMessage(
-    message: Message,
-    client: Client,
-    logger: Logger
-  ): Promise<unknown>;
-}
+export const isMessageCommand = (
+  cmd: ICommandBase
+): cmd is ICommandBase & IMessageCommand =>
+  hasOwnProperty(cmd, 'handleMessage');
