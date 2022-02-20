@@ -19,6 +19,7 @@ export interface ISlashCommand {
 }
 
 export interface IMessageCommand {
+  aliases?: string[];
   handleMessage(
     message: Message,
     client: Client,

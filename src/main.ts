@@ -13,6 +13,21 @@ import {
   isSlashCommand
 } from './command';
 
+type CommandType =
+  | ICommandBase
+  | (ICommandBase & IMessageCommand)
+  | (ICommandBase & IMessageCommand & ISlashCommand);
+
+const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
+  const commandNames = await readdir(path.join(__dirname, 'commands'));
+  return Promise.all(
+    commandNames.map(async (name): Promise<CommandType> => {
+      logger.log('info', `Loading command ${name}`);
+      return (await import(`./commands/${name}`)).default;
+    })
+  );
+};
+
 const init = async () => {
   // Initialize logger
   const logger = winston.createLogger({
@@ -65,6 +80,7 @@ const init = async () => {
   // Interaction registration:
   const commands = await loadCommands(logger);
   const interactionCommands = commands.filter((c) => isSlashCommand(c));
+  const messageCommands = commands.filter((c) => isMessageCommand(c));
 
   const rest = new REST({ version: '9' }).setToken(token);
   await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
@@ -76,13 +92,21 @@ const init = async () => {
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
-    logger.log('info', 'Received message');
-    message.channel.send('Message received!');
+    // Bot will listen for messages that starts with `!`
+    if (message.content.startsWith('!')) {
+      const args = message.content.substring(1).split(' ');
+      const cmd = args[0].toUpperCase();
 
-    for (const command of commands) {
-      if (isMessageCommand(command)) {
-        await command.handleMessage(message, client, logger);
-        return;
+      for (const command of messageCommands) {
+        if (
+          isMessageCommand(command) &&
+          (command.data.name.toUpperCase() === cmd ||
+            command.aliases?.map((c) => c.toUpperCase()).includes(cmd))
+        ) {
+          logger.log('info', `Command ${command.data.name} executed`);
+          await command.handleMessage(message, client, logger);
+          return;
+        }
       }
     }
   });
@@ -91,12 +115,12 @@ const init = async () => {
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
 
-    logger.log('info', 'Received interaction');
     for (const command of interactionCommands) {
       if (
         isSlashCommand(command) &&
         command.data.name === interaction.commandName
       ) {
+        logger.log('info', `Interaction ${command.data.name} executed`);
         await command.handleInteraction(interaction, client, logger);
         return;
       }
@@ -105,21 +129,6 @@ const init = async () => {
 
   // Finalize initiation by logging in
   client.login(token);
-};
-
-type CommandType =
-  | ICommandBase
-  | (ICommandBase & IMessageCommand)
-  | (ICommandBase & IMessageCommand & ISlashCommand);
-
-const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
-  const commandNames = await readdir(path.join(__dirname, 'commands'));
-  return Promise.all(
-    commandNames.map(async (name): Promise<CommandType> => {
-      logger.log('info', `Name is ${name}`);
-      return (await import(`./commands/${name}`)).default;
-    })
-  );
 };
 
 init();

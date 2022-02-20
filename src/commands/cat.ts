@@ -5,22 +5,15 @@ import {
   MessageEmbed,
   MessageAttachment,
   MessageOptions,
-  Message} from 'discord.js';
+  Message
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
-import { readdir } from 'fs/promises';
-import * as path from 'path';
 import { Logger } from 'winston';
-
-const getRandomFileFromFolder = async (folder: string): Promise<string> => {
-  const rootPath = path.join(process.cwd(), `data/${folder}`);
-  const files = await readdir(rootPath);
-  if (Array.isArray(files) && 0 < files.length)
-    return path.join(rootPath, files[Math.floor(Math.random() * files.length)]);
-  throw new Error(`Could'nt find a random file in folder ${folder}`);
-};
+import { getRandomAssetFileFromFolder } from '../util';
+import * as path from 'path';
 
 const findCat = async (): Promise<MessageOptions> => {
-  const file = await getRandomFileFromFolder('Cats');
+  const file = await getRandomAssetFileFromFolder('Cats');
   const attachment = new MessageAttachment(file);
   const embed = new MessageEmbed()
     .setTitle('Random cat')
@@ -43,12 +36,14 @@ const cat: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       return interaction.reply(await findCat());
     } catch (e) {
+      logger.log('error', e);
       return interaction.reply({
         content: 'Failed to send cat. :(',
         ephemeral: true
       });
     }
   },
+  aliases: ['cats', 'randomcat'],
   handleMessage: async (
     message: Message,
     client: Client,
@@ -57,6 +52,7 @@ const cat: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       return message.channel.send(await findCat());
     } catch (e) {
+      logger.log('error', e);
       return message.channel.send('Failed to send cat. :(');
     }
   }
