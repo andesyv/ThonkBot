@@ -1,4 +1,9 @@
-import { Message } from 'discord.js';
+import {
+  Message,
+  MessageAttachment,
+  MessageEmbed,
+  MessageOptions
+} from 'discord.js';
 import { readdir } from 'fs/promises';
 import * as path from 'path';
 
@@ -12,6 +17,22 @@ export const getRandomAssetFileFromFolder = async (
     return path.join(rootPath, files[Math.floor(Math.random() * files.length)]);
 
   throw new Error(`Could'nt find a random file in folder ${folder}`);
+};
+
+export const randomImageToEmbed = async (
+  folder: string,
+  title?: string
+): Promise<MessageOptions> => {
+  const file = await getRandomAssetFileFromFolder(folder);
+  const attachment = new MessageAttachment(file);
+  let embed = new MessageEmbed().setImage(
+    `attachment://${path.basename(file)}`
+  );
+  if (title !== undefined) embed = embed.setTitle(title);
+  return {
+    embeds: [embed],
+    files: [attachment]
+  };
 };
 
 export const getCommandArgs = (message: Message) => {

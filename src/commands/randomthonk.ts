@@ -1,28 +1,22 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import {
-  CommandInteraction,
-  Client,
-  Message,
-  MessageAttachment
-} from 'discord.js';
+import { CommandInteraction, Client, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import * as path from 'path';
+import { randomImageToEmbed } from '../util';
 
-const thonk: ICommandBase & ISlashCommand & IMessageCommand = {
+const randomthonk: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
-    .setName('thonk')
-    .setDescription('Sends a thonk emoji.'),
+    .setName('randomthonk')
+    .setDescription('Sends a random thonk emoji from a selection of thonks.'),
   handleInteraction: async (
     interaction: CommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
     try {
-      const attachment = new MessageAttachment(
-        path.join(process.cwd(), 'data/ThonkEmojis/thonk.png')
+      return interaction.reply(
+        await randomImageToEmbed('ThonkEmojis', 'Random thonk')
       );
-      return interaction.reply({ files: [attachment] });
     } catch (e) {
       logger.log('error', e);
       return interaction.reply({
@@ -31,17 +25,16 @@ const thonk: ICommandBase & ISlashCommand & IMessageCommand = {
       });
     }
   },
-  aliases: ['thinking'],
+  aliases: ['randomthink'],
   handleMessage: async (
     message: Message,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
     try {
-      const attachment = new MessageAttachment(
-        path.join(process.cwd(), 'data/ThonkEmojis/thonk.png')
+      return message.channel.send(
+        await randomImageToEmbed('ThonkEmojis', 'Random thonk')
       );
-      return message.channel.send({ files: [attachment] });
     } catch (e) {
       logger.log('error', e);
       return message.channel.send('Command failed. :(');
@@ -49,4 +42,4 @@ const thonk: ICommandBase & ISlashCommand & IMessageCommand = {
   }
 };
 
-export default thonk;
+export default randomthonk;

@@ -1,28 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import {
-  CommandInteraction,
-  Client,
-  MessageEmbed,
-  MessageAttachment,
-  MessageOptions,
-  Message
-} from 'discord.js';
+import { CommandInteraction, Client, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { getRandomAssetFileFromFolder } from '../util';
-import * as path from 'path';
-
-const findCat = async (): Promise<MessageOptions> => {
-  const file = await getRandomAssetFileFromFolder('Cats');
-  const attachment = new MessageAttachment(file);
-  const embed = new MessageEmbed()
-    .setTitle('Random cat')
-    .setImage(`attachment://${path.basename(file)}`);
-  return {
-    embeds: [embed],
-    files: [attachment]
-  };
-};
+import { randomImageToEmbed } from '../util';
 
 const cat: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -34,7 +14,7 @@ const cat: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return interaction.reply(await findCat());
+      return interaction.reply(await randomImageToEmbed('Cats', 'Random cat'));
     } catch (e) {
       logger.log('error', e);
       return interaction.reply({
@@ -50,7 +30,9 @@ const cat: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(await findCat());
+      return message.channel.send(
+        await randomImageToEmbed('Cats', 'Random cat')
+      );
     } catch (e) {
       logger.log('error', e);
       return message.channel.send('Failed to send cat. :(');
