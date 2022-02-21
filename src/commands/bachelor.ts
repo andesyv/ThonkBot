@@ -2,13 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, Client, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { randomImageToEmbed } from '../util';
-import {
-  Interval,
-  intervalToDuration,
-  formatDuration,
-  formatDistance
-} from 'date-fns';
+import { Interval, intervalToDuration, formatDistance } from 'date-fns';
 
 const percentageTowardsDate = (from: Date, to: Date): number => {
   const now = Date.now();

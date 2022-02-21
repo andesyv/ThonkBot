@@ -2,12 +2,17 @@
  * Most code here gracefully stolen from https://github.com/lesesalen/lesebot
  */
 
-import { SlashCommandBuilder } from '@discordjs/builders';
+import {
+  SlashCommandBuilder,
+  SlashCommandSubcommandsOnlyBuilder
+} from '@discordjs/builders';
 import { Client, CommandInteraction, Message } from 'discord.js';
 import { Logger } from 'winston';
 
 export interface ICommandBase {
-  data: SlashCommandBuilder;
+  data:
+    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
+    | SlashCommandSubcommandsOnlyBuilder;
 }
 
 export interface ISlashCommand {
