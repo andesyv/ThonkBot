@@ -40,3 +40,16 @@ export const getCommandArgs = (message: Message) => {
   args.shift();
   return args;
 };
+
+/** Shuffles array in place.
+ * Modern version of Fisher-Yates (aka Knuth) Shuffle. ES6 version
+ * @param {Array} a items An array containing the items.
+ * @see https://bost.ocks.org/mike/shuffle/ and https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
+ */
+export function shuffle<T>(a: T[]): T[] {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
