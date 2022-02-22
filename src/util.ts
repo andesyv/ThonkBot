@@ -35,7 +35,7 @@ export const randomImageToEmbed = async (
   };
 };
 
-export const getCommandArgs = (message: Message) => {
+export const getCommandArgs = (message: Message): string[] => {
   const args = message.content.substring(1).split(' ');
   args.shift();
   return args;
