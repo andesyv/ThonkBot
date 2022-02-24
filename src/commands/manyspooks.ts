@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { shuffle } from '../util';
+import { shuffle } from '../utils';
 import * as path from 'path';
 import { readdir, stat } from 'fs/promises';
 

@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, Client, Message, MessageEmbed } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { getCommandArgs } from '../util';
+import { getCommandArgs } from '../utils';
 import { request } from '@octokit/request';
 
 const getLastCommits = async (count: number): Promise<MessageEmbed[]> => {

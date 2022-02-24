@@ -3,7 +3,7 @@ import winston from 'winston';
 import { token, clientId, guildId } from './../config.json';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import { readdir } from 'fs/promises';
+import { readdir, stat } from 'fs/promises';
 import * as path from 'path';
 import {
   ICommandBase,
@@ -12,18 +12,36 @@ import {
   isMessageCommand,
   isSlashCommand
 } from './command';
+import { initDB } from './dbutils';
 
 type CommandType =
   | ICommandBase
   | (ICommandBase & IMessageCommand)
   | (ICommandBase & IMessageCommand & ISlashCommand);
 
+const fetchCommandPaths = async (root: string): Promise<string[]> => {
+  return (
+    await Promise.all(
+      (
+        await readdir(root)
+      ).map(async (name) => {
+        const filePath = path.join(root, name);
+        return (await stat(filePath)).isDirectory()
+          ? await fetchCommandPaths(filePath)
+          : filePath;
+      })
+    )
+  ).flat();
+};
+
 const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
-  const commandNames = await readdir(path.join(__dirname, 'commands'));
+  const commandPaths = await fetchCommandPaths(
+    path.join(__dirname, 'commands')
+  );
   return Promise.all(
-    commandNames.map(async (name): Promise<CommandType> => {
-      logger.log('info', `Loading command ${name}`);
-      return (await import(`./commands/${name}`)).default;
+    commandPaths.map(async (filePath): Promise<CommandType> => {
+      logger.log('info', `Loading command ${path.basename(filePath)}`);
+      return (await import(filePath)).default;
     })
   );
 };
@@ -126,6 +144,9 @@ const init = async () => {
       }
     }
   });
+
+  // Initiate database
+  initDB();
 
   // Finalize initiation by logging in
   client.login(token);

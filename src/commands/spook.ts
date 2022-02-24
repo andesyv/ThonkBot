@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { randomImageToEmbed } from '../util';
+import { randomImageToEmbed } from '../utils';
 
 const sendPersonalSpook = async (
   target: GuildMember,
