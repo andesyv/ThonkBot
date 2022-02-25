@@ -125,3 +125,10 @@ export const getUserPointsEntry = (member: GuildMember): Promise<DBBank> => {
     }
   }
 };
+
+export const updatePoints = ({ id, guild }: GuildMember, points: number) => {
+  const setScore = sql.prepare(
+    'UPDATE bank SET points = @points WHERE bid = (SELECT bid FROM guilds WHERE uid = @uid AND gid = @gid);'
+  );
+  setScore.run({ uid: id, gid: guild.id, points: points });
+};
