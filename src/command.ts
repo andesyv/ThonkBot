@@ -6,7 +6,7 @@ import {
   SlashCommandBuilder,
   SlashCommandSubcommandsOnlyBuilder
 } from '@discordjs/builders';
-import { Client, CommandInteraction, Message } from 'discord.js';
+import { CommandInteraction, Message } from 'discord.js';
 import { Logger } from 'winston';
 import BotClient from './client';
 

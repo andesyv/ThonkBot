@@ -1,6 +1,6 @@
 import { Intents } from 'discord.js';
 import winston from 'winston';
-import { token, clientId, guildId } from './../config.json';
+import { token, clientId } from './../config.json';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { readdir, stat } from 'fs/promises';
@@ -104,7 +104,7 @@ const init = async () => {
 
   // Interaction registration:
   const rest = new REST({ version: '9' }).setToken(token);
-  await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+  await rest.put(Routes.applicationCommands(clientId), {
     body: client.interactionCommands.map((c) => c.data.toJSON())
   });
   logger.log('info', 'Successfully registered application commands.');

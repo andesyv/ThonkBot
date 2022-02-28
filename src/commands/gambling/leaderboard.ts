@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
 import { Logger } from 'winston';
-import { getLeaderboards, getUserPointsEntry } from '../../dbutils';
+import { getLeaderboards } from '../../dbutils';
 
 const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
