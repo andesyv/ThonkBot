@@ -86,7 +86,12 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
           return message.reply("You're broke!");
         } else {
           const args = getCommandArgs(message);
-          let amount = 0 < args.length ? (args[0].toUpperCase() === 'ALL' ? points : parseNumber(args[0])) : undefined;
+          let amount =
+            0 < args.length
+              ? args[0].toUpperCase() === 'ALL'
+                ? points
+                : parseNumber(args[0])
+              : undefined;
           if (amount) {
             amount = Math.min(amount, points);
             const [newPoints, roll] = gamble(points, amount);
@@ -100,7 +105,9 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
               )
             );
           } else {
-            return message.reply('You need to specify a valid amount (or "all") to gamble.');
+            return message.reply(
+              'You need to specify a valid amount (or "all") to gamble.'
+            );
           }
         }
       } else {
