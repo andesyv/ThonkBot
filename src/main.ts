@@ -1,4 +1,4 @@
-import { Client, Intents } from 'discord.js';
+import { Intents } from 'discord.js';
 import winston from 'winston';
 import { token, clientId, guildId } from './../config.json';
 import { REST } from '@discordjs/rest';
@@ -13,6 +13,7 @@ import {
   isSlashCommand
 } from './command';
 import { initDB } from './dbutils';
+import BotClient from './client';
 
 type CommandType =
   | ICommandBase
@@ -82,27 +83,29 @@ const init = async () => {
     ]
   });
 
-  const client = new Client({
-    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
-  });
+  const commands = await loadCommands(logger);
+
+  // Client construction
+  const client = new BotClient(
+    {
+      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
+    },
+    commands
+  );
 
   client.once('ready', () => {
     logger.log(
       'info',
       'Logged in as: ' + client.user?.tag ??
-        '¯_(ツ)_/¯' + ' - (' + client.user?.id ??
-        '¯_(ツ)_/¯' + ')'
+        '¯\\_(ツ)_/¯' + ' - (' + client.user?.id ??
+        '¯\\_(ツ)_/¯' + ')'
     );
   });
 
   // Interaction registration:
-  const commands = await loadCommands(logger);
-  const interactionCommands = commands.filter((c) => isSlashCommand(c));
-  const messageCommands = commands.filter((c) => isMessageCommand(c));
-
   const rest = new REST({ version: '9' }).setToken(token);
   await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-    body: interactionCommands.map((c) => c.data.toJSON())
+    body: client.interactionCommands.map((c) => c.data.toJSON())
   });
   logger.log('info', 'Successfully registered application commands.');
 
@@ -115,7 +118,7 @@ const init = async () => {
       const args = message.content.substring(1).split(' ');
       const cmd = args[0].toUpperCase();
 
-      for (const command of messageCommands) {
+      for (const command of client.messageCommands) {
         if (
           isMessageCommand(command) &&
           (command.data.name.toUpperCase() === cmd ||
@@ -133,7 +136,7 @@ const init = async () => {
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
 
-    for (const command of interactionCommands) {
+    for (const command of client.interactionCommands) {
       if (
         isSlashCommand(command) &&
         command.data.name === interaction.commandName

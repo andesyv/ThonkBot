@@ -8,6 +8,7 @@ import {
 } from '@discordjs/builders';
 import { Client, CommandInteraction, Message } from 'discord.js';
 import { Logger } from 'winston';
+import BotClient from './client';
 
 export interface ICommandBase {
   data:
@@ -18,7 +19,7 @@ export interface ICommandBase {
 export interface ISlashCommand {
   handleInteraction(
     interaction: CommandInteraction,
-    client: Client,
+    client: BotClient,
     logger: Logger
   ): Promise<unknown>;
 }
@@ -27,7 +28,7 @@ export interface IMessageCommand {
   aliases?: string[];
   handleMessage(
     message: Message,
-    client: Client,
+    client: BotClient,
     logger: Logger
   ): Promise<unknown>;
 }
