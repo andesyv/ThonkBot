@@ -1,6 +1,14 @@
+# Node files
 node_modules/
+
+# Log files
 *.log
-auth.json
-ThonkTestBotAuthKey.txt
-settings.json
+
+# The config file
+config.json
+
+# Database files
 *.sqlite
+
+# build files
+build
