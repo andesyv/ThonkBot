@@ -44,7 +44,7 @@ const thonk: ICommandBase & ISlashCommand & IMessageCommand = {
       return message.channel.send({ files: [attachment] });
     } catch (e) {
       logger.log('error', e);
-      return message.channel.send('Command failed. :(');
+      return message.reply('Command failed. :(');
     }
   }
 };

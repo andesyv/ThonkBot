@@ -32,7 +32,7 @@ const think: ICommandBase & ISlashCommand & IMessageCommand = {
       return message.channel.send(':thinking:');
     } catch (e) {
       logger.log('error', e);
-      return message.channel.send('Command failed. :(');
+      return message.reply('Command failed. :(');
     }
   }
 };

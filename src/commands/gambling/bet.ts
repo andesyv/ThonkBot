@@ -117,7 +117,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
       }
     } catch (e) {
       logger.log('error', e);
-      return message.channel.send('Command failed. :(');
+      return message.reply('Command failed. :(');
     }
   }
 };

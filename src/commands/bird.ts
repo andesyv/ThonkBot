@@ -32,7 +32,7 @@ const bird: ICommandBase & ISlashCommand & IMessageCommand = {
       return message.channel.send(await randomImageToEmbed('Bird', 'Bird'));
     } catch (e) {
       logger.log('error', e);
-      return message.channel.send('Command failed. :(');
+      return message.reply('Command failed. :(');
     }
   }
 };

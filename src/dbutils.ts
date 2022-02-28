@@ -1,6 +1,6 @@
 import SQLite, { SqliteError } from 'better-sqlite3';
 import * as dateFns from 'date-fns';
-import { GuildMember } from 'discord.js';
+import { Guild, GuildMember, MessageEmbed } from 'discord.js';
 const sql = new SQLite('./db.sqlite');
 
 export interface DBBank {
@@ -131,4 +131,36 @@ export const updatePoints = ({ id, guild }: GuildMember, points: number) => {
     'UPDATE bank SET points = @points WHERE bid = (SELECT bid FROM guilds WHERE uid = @uid AND gid = @gid);'
   );
   setScore.run({ uid: id, gid: guild.id, points: points });
+};
+
+export const getLeaderboards = (guild: Guild): MessageEmbed | undefined => {
+  const guilds = sql
+    .prepare(
+      `SELECT * FROM bank
+      WHERE bid IN (SELECT bid FROM guilds WHERE gid = @gid)
+      ORDER BY points DESC
+      LIMIT 10;`
+    )
+    .all({ gid: guild.id })
+    .map((p: DBBank): DBBank | undefined => {
+      const member = guild.members.resolve(p.id);
+      return member
+        ? { ...p, points: p.points + getTimePoints(member) }
+        : undefined;
+    })
+    .filter((v): v is DBBank => v !== undefined);
+  if (0 < guilds.length) {
+    const longestName = guilds
+      .map(({ user }) => user)
+      .reduce((l, r) => (l.length < r.length ? r : l), '').length;
+
+    const desc = guilds
+      .map(({ user, points }, i) => {
+        return `${i + 1}. \t \`${user}\` ${' '.repeat(
+          longestName - user.length
+        )}\t (**${points}** sthonks)`;
+      })
+      .join('\n');
+    return new MessageEmbed().setTitle('Leaderboards').setDescription(desc);
+  }
 };

@@ -95,9 +95,6 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
             .map((s) => (s.toUpperCase() === 'ALL' ? points : parseNumber(s)))
             .find((v) => v);
           const target = message.mentions.members?.first();
-          console.log(points);
-          console.log(amount);
-          console.log(target);
 
           if (amount && target) {
             if (target === message.member) {
@@ -125,13 +122,11 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
           }
         }
       } else {
-        return message.channel.send(
-          'Command is only available in a server. :('
-        );
+        return message.reply('Command is only available in a server. :(');
       }
     } catch (e) {
       logger.log('error', e);
-      return message.channel.send('Command failed. :(');
+      return message.reply('Command failed. :(');
     }
   }
 };

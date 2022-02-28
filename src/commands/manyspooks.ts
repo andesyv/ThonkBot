@@ -61,7 +61,7 @@ const manyspooks: ICommandBase & ISlashCommand & IMessageCommand = {
       return message.channel.send(await fetchManySpooks());
     } catch (e) {
       logger.log('error', e);
-      return message.channel.send('Command failed. :(');
+      return message.reply('Command failed. :(');
     }
   }
 };

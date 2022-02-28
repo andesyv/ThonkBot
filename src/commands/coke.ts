@@ -33,7 +33,7 @@ const coke: ICommandBase & ISlashCommand & IMessageCommand = {
       return message.channel.send(await randomImageToEmbed('Coke'));
     } catch (e) {
       logger.log('error', e);
-      return message.channel.send('Command failed. :(');
+      return message.reply('Command failed. :(');
     }
   }
 };
