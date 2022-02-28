@@ -47,42 +47,42 @@ const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
   );
 };
 
-const init = async () => {
-  // Initialize logger
-  const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.json(),
-    transports: [
-      //
-      // - Write to all logs with level `info` and below to `combined.log`
-      // - Write all logs error (and below) to `error.log`.
-      //
-      new winston.transports.File({
-        filename: 'error.log',
-        level: 'error',
-        format: winston.format.combine(
-          winston.format.timestamp({
-            format: 'ss::mm::HH DD-MM-YYYY'
-          }),
-          winston.format.json()
-        )
-      }),
-      new winston.transports.File({
-        filename: 'warning.log',
-        level: 'warn',
-        format: winston.format.combine(
-          winston.format.timestamp({
-            format: 'ss::mm::HH DD-MM-YYYY'
-          }),
-          winston.format.json()
-        )
-      }),
-      new winston.transports.Console({
-        format: winston.format.colorize()
-      })
-    ]
-  });
+// Initialize logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    //
+    // - Write to all logs with level `info` and below to `combined.log`
+    // - Write all logs error (and below) to `error.log`.
+    //
+    new winston.transports.File({
+      filename: 'error.log',
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.timestamp({
+          format: 'ss::mm::HH DD-MM-YYYY'
+        }),
+        winston.format.json()
+      )
+    }),
+    new winston.transports.File({
+      filename: 'warning.log',
+      level: 'warn',
+      format: winston.format.combine(
+        winston.format.timestamp({
+          format: 'ss::mm::HH DD-MM-YYYY'
+        }),
+        winston.format.json()
+      )
+    }),
+    new winston.transports.Console({
+      format: winston.format.colorize()
+    })
+  ]
+});
 
+const init = async () => {
   const commands = await loadCommands(logger);
 
   // Client construction
@@ -111,40 +111,48 @@ const init = async () => {
 
   // Message handling (for old command format)
   client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
+    try {
+      if (message.author.bot) return;
 
-    // Bot will listen for messages that starts with `!`
-    if (message.content.startsWith('!')) {
-      const args = message.content.substring(1).split(' ');
-      const cmd = args[0].toUpperCase();
+      // Bot will listen for messages that starts with `!`
+      if (message.content.startsWith('!')) {
+        const args = message.content.substring(1).split(' ');
+        const cmd = args[0].toUpperCase();
 
-      for (const command of client.messageCommands) {
-        if (
-          isMessageCommand(command) &&
-          (command.data.name.toUpperCase() === cmd ||
-            command.aliases?.map((c) => c.toUpperCase()).includes(cmd))
-        ) {
-          logger.log('info', `Command ${command.data.name} executed`);
-          await command.handleMessage(message, client, logger);
-          return;
+        for (const command of client.messageCommands) {
+          if (
+            isMessageCommand(command) &&
+            (command.data.name.toUpperCase() === cmd ||
+              command.aliases?.map((c) => c.toUpperCase()).includes(cmd))
+          ) {
+            logger.log('info', `Command ${command.data.name} executed`);
+            await command.handleMessage(message, client, logger);
+            return;
+          }
         }
       }
+    } catch (e) {
+      logger.log('error', e);
     }
   });
 
   // Interaction handling (new command system)
   client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isCommand()) return;
+    try {
+      if (!interaction.isCommand()) return;
 
-    for (const command of client.interactionCommands) {
-      if (
-        isSlashCommand(command) &&
-        command.data.name === interaction.commandName
-      ) {
-        logger.log('info', `Interaction ${command.data.name} executed`);
-        await command.handleInteraction(interaction, client, logger);
-        return;
+      for (const command of client.interactionCommands) {
+        if (
+          isSlashCommand(command) &&
+          command.data.name === interaction.commandName
+        ) {
+          logger.log('info', `Interaction ${command.data.name} executed`);
+          await command.handleInteraction(interaction, client, logger);
+          return;
+        }
       }
+    } catch (e) {
+      logger.log('error', e);
     }
   });
 
