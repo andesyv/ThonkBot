@@ -32,7 +32,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
       opt
         .setName('amount')
         .setDescription('The amount you would like to bet.')
-        .setMinValue(0)
+        .setMinValue(1)
         .setRequired(true)
     ),
   handleInteraction: async (
