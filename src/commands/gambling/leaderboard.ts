@@ -15,7 +15,7 @@ const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       if (interaction.member instanceof GuildMember) {
-        const embed = getLeaderboards(interaction.member.guild);
+        const embed = await getLeaderboards(interaction.member.guild);
 
         return embed
           ? interaction.reply({ embeds: [embed] })
@@ -39,7 +39,7 @@ const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       if (message.member) {
-        const embed = getLeaderboards(message.member.guild);
+        const embed = await getLeaderboards(message.member.guild);
         return embed
           ? message.channel.send({ embeds: [embed] })
           : message.channel.send("There's no leaderboards yet. :(");

@@ -133,22 +133,26 @@ export const updatePoints = ({ id, guild }: GuildMember, points: number) => {
   setScore.run({ uid: id, gid: guild.id, points: points });
 };
 
-export const getLeaderboards = (guild: Guild): MessageEmbed | undefined => {
-  const guilds = sql
-    .prepare(
-      `SELECT * FROM bank
-      WHERE bid IN (SELECT bid FROM guilds WHERE gid = @gid)
-      ORDER BY points DESC
-      LIMIT 10;`
+export const getLeaderboards = async (
+  guild: Guild
+): Promise<MessageEmbed | undefined> => {
+  const guilds = (
+    await Promise.all(
+      sql
+        .prepare(
+          `SELECT * FROM bank
+      WHERE bid IN (SELECT bid FROM guilds WHERE gid = @gid);`
+        )
+        .all({ gid: guild.id })
+        .map(async (p: DBBank): Promise<DBBank | undefined> => {
+          const member = await guild.members.fetch(p.id);
+          return member
+            ? { ...p, points: p.points + getTimePoints(member) }
+            : undefined;
+        })
     )
-    .all({ gid: guild.id })
-    .map((p: DBBank): DBBank | undefined => {
-      const member = guild.members.resolve(p.id);
-      return member
-        ? { ...p, points: p.points + getTimePoints(member) }
-        : undefined;
-    })
-    .filter((v): v is DBBank => v !== undefined);
+  ).filter((v): v is DBBank => v !== undefined);
+  guilds.sort((a, b) => b.points - a.points);
   if (0 < guilds.length) {
     const longestName = guilds
       .map(({ user }) => user)
