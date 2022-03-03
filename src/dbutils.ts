@@ -151,7 +151,9 @@ export const getLeaderboards = async (
             : undefined;
         })
     )
-  ).filter((v): v is DBBank => v !== undefined);
+  )
+    .filter((v): v is DBBank => v !== undefined)
+    .slice(0, 10);
   guilds.sort((a, b) => b.points - a.points);
   if (0 < guilds.length) {
     const longestName = guilds

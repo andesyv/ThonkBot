@@ -1,6 +1,6 @@
 {
   "name": "thonkbot",
-  "version": "2.0.1",
+  "version": "2.0.4",
   "description": "A thonky discord bot",
   "main": "./src/main.js",
   "repository": "andesyv/ThonkBot",
