@@ -1,7 +1,7 @@
 import SQLite, { SqliteError } from 'better-sqlite3';
 import * as dateFns from 'date-fns';
 import { Guild, GuildMember, MessageEmbed } from 'discord.js';
-const sql = new SQLite('./db.sqlite');
+export const db = new SQLite('./db.sqlite');
 
 export interface DBBank {
   bid?: number;
@@ -21,46 +21,38 @@ export interface DBGuild {
 }
 
 export const initDB = () => {
-  sql
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS bank (
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS bank (
         bid INTEGER PRIMARY KEY,
         id TEXT,
         user TEXT,
         points INTEGER
         );`
-    )
-    .run();
-  sql
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS metabank (
+  ).run();
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS metabank (
         bid INTEGER PRIMARY KEY,
         lastupdated TEXT
         );`
-    )
-    .run();
-  sql
-    .prepare(
-      `CREATE TRIGGER IF NOT EXISTS recordtime AFTER UPDATE ON bank
+  ).run();
+  db.prepare(
+    `CREATE TRIGGER IF NOT EXISTS recordtime AFTER UPDATE ON bank
         BEGIN
             UPDATE metabank SET lastupdated=datetime('now') WHERE bid = NEW.bid;
         END;`
-    )
-    .run();
-  sql
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS guilds (
+  ).run();
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS guilds (
         gid TEXT,
         uid TEXT,
         bid INTEGER PRIMARY KEY
         );`
-    )
-    .run();
+  ).run();
 };
 
 export const getTimePoints = (member: GuildMember): number => {
   const sqltime = (
-    sql
+    db
       .prepare(
         'select lastupdated from metabank where bid = (select bid from guilds where uid = @uid and gid = @gid);'
       )
@@ -76,7 +68,7 @@ export const getTimePoints = (member: GuildMember): number => {
 
 export const getUserPointsEntry = (member: GuildMember): Promise<DBBank> => {
   try {
-    let obj = sql
+    let obj = db
       .prepare(
         'SELECT * FROM bank WHERE bid = (SELECT bid FROM guilds WHERE uid = @uid AND gid = @gid);'
       )
@@ -91,25 +83,22 @@ export const getUserPointsEntry = (member: GuildMember): Promise<DBBank> => {
         points: 100
       };
 
-      const createUserTable = sql.transaction((userObject: DBBank) => {
-        sql
-          .prepare('INSERT INTO guilds(gid, uid) VALUES (@gid, @uid);')
-          .run({ gid: member.guild.id, uid: userObject.id });
-        sql
-          .prepare(
-            'INSERT INTO bank(bid, id, user, points) VALUES ((SELECT bid FROM guilds where uid = @uid AND gid = @gid), @uid, @tag, @points);'
-          )
-          .run({
-            uid: userObject.id,
-            gid: member.guild.id,
-            tag: userObject.user,
-            points: userObject.points
-          });
-        sql
-          .prepare(
-            "INSERT INTO metabank(bid, lastupdated) VALUES ((SELECT bid FROM guilds where uid = @uid AND gid = @gid), datetime('now'));"
-          )
-          .run({ uid: userObject.id, gid: member.guild.id });
+      const createUserTable = db.transaction((userObject: DBBank) => {
+        db.prepare('INSERT INTO guilds(gid, uid) VALUES (@gid, @uid);').run({
+          gid: member.guild.id,
+          uid: userObject.id
+        });
+        db.prepare(
+          'INSERT INTO bank(bid, id, user, points) VALUES ((SELECT bid FROM guilds where uid = @uid AND gid = @gid), @uid, @tag, @points);'
+        ).run({
+          uid: userObject.id,
+          gid: member.guild.id,
+          tag: userObject.user,
+          points: userObject.points
+        });
+        db.prepare(
+          "INSERT INTO metabank(bid, lastupdated) VALUES ((SELECT bid FROM guilds where uid = @uid AND gid = @gid), datetime('now'));"
+        ).run({ uid: userObject.id, gid: member.guild.id });
       });
 
       createUserTable(obj);
@@ -127,7 +116,7 @@ export const getUserPointsEntry = (member: GuildMember): Promise<DBBank> => {
 };
 
 export const updatePoints = ({ id, guild }: GuildMember, points: number) => {
-  const setScore = sql.prepare(
+  const setScore = db.prepare(
     'UPDATE bank SET points = @points WHERE bid = (SELECT bid FROM guilds WHERE uid = @uid AND gid = @gid);'
   );
   setScore.run({ uid: id, gid: guild.id, points: points });
@@ -138,7 +127,7 @@ export const getLeaderboards = async (
 ): Promise<MessageEmbed | undefined> => {
   const guilds = (
     await Promise.all(
-      sql
+      db
         .prepare(
           `SELECT * FROM bank
       WHERE bid IN (SELECT bid FROM guilds WHERE gid = @gid);`

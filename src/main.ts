@@ -14,6 +14,7 @@ import {
 } from './command';
 import { initDB } from './dbutils';
 import BotClient from './client';
+import { initWords } from './commands/wordle';
 
 type CommandType =
   | ICommandBase
@@ -158,6 +159,8 @@ const init = async () => {
 
   // Initiate database
   initDB();
+
+  void initWords(logger);
 
   // Finalize initiation by logging in
   client.login(token);
