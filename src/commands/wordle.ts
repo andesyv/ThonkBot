@@ -3,20 +3,17 @@ import {
   CommandInteraction,
   Client,
   Message,
-  GuildMember,
   Guild,
   MessageEmbed,
   MessageButton,
   MessageActionRow,
-  MessageButtonStyleResolvable,
-  Formatters
+  MessageButtonStyleResolvable
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand } from '../command';
 import { Logger } from 'winston';
 import { db } from '../dbutils';
 import axios from 'axios';
 import { getNickname, splitToChunks } from '../utils';
-import { addMinutes } from 'date-fns';
 
 interface DictEntry {
   word: string;

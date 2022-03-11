@@ -1,6 +1,5 @@
 import SQLite, { SqliteError } from 'better-sqlite3';
 import * as dateFns from 'date-fns';
-import { sq } from 'date-fns/locale';
 import { Guild, GuildMember, MessageEmbed } from 'discord.js';
 export const db = new SQLite('./db.sqlite');
 
