@@ -1,8 +1,10 @@
 import {
+  GuildMember,
   Message,
   MessageAttachment,
   MessageEmbed,
-  MessageOptions
+  MessageOptions,
+  User
 } from 'discord.js';
 import { readdir } from 'fs/promises';
 import * as path from 'path';
@@ -52,4 +54,17 @@ export function shuffle<T>(a: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+export const getNickname = (
+  member: GuildMember | unknown,
+  user: User
+): string =>
+  (member instanceof GuildMember ? member.nickname : null) ?? user.tag;
+
+export function splitToChunks<T>(components: T[], chunksize: number): T[][] {
+  let result = [];
+  for (let i = 0; i < components.length; i += chunksize)
+    result.push(components.slice(i, i + chunksize));
+  return result;
 }

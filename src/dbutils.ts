@@ -22,41 +22,33 @@ export interface DBGuild {
 }
 
 export const initDB = () => {
-  db
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS bank (
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS bank (
         bid INTEGER PRIMARY KEY,
         id TEXT,
         user TEXT,
         points INTEGER
         );`
-    )
-    .run();
-  db
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS metabank (
+  ).run();
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS metabank (
         bid INTEGER PRIMARY KEY,
         lastupdated TEXT
         );`
-    )
-    .run();
-  db
-    .prepare(
-      `CREATE TRIGGER IF NOT EXISTS recordtime AFTER UPDATE ON bank
+  ).run();
+  db.prepare(
+    `CREATE TRIGGER IF NOT EXISTS recordtime AFTER UPDATE ON bank
         BEGIN
             UPDATE metabank SET lastupdated=datetime('now') WHERE bid = NEW.bid;
         END;`
-    )
-    .run();
-  db
-    .prepare(
-      `CREATE TABLE IF NOT EXISTS guilds (
+  ).run();
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS guilds (
         gid TEXT,
         uid TEXT,
         bid INTEGER PRIMARY KEY
         );`
-    )
-    .run();
+  ).run();
 };
 
 export const getTimePoints = (member: GuildMember): number => {
@@ -93,24 +85,21 @@ export const getUserPointsEntry = (member: GuildMember): Promise<DBBank> => {
       };
 
       const createUserTable = db.transaction((userObject: DBBank) => {
-        db
-          .prepare('INSERT INTO guilds(gid, uid) VALUES (@gid, @uid);')
-          .run({ gid: member.guild.id, uid: userObject.id });
-        db
-          .prepare(
-            'INSERT INTO bank(bid, id, user, points) VALUES ((SELECT bid FROM guilds where uid = @uid AND gid = @gid), @uid, @tag, @points);'
-          )
-          .run({
-            uid: userObject.id,
-            gid: member.guild.id,
-            tag: userObject.user,
-            points: userObject.points
-          });
-        db
-          .prepare(
-            "INSERT INTO metabank(bid, lastupdated) VALUES ((SELECT bid FROM guilds where uid = @uid AND gid = @gid), datetime('now'));"
-          )
-          .run({ uid: userObject.id, gid: member.guild.id });
+        db.prepare('INSERT INTO guilds(gid, uid) VALUES (@gid, @uid);').run({
+          gid: member.guild.id,
+          uid: userObject.id
+        });
+        db.prepare(
+          'INSERT INTO bank(bid, id, user, points) VALUES ((SELECT bid FROM guilds where uid = @uid AND gid = @gid), @uid, @tag, @points);'
+        ).run({
+          uid: userObject.id,
+          gid: member.guild.id,
+          tag: userObject.user,
+          points: userObject.points
+        });
+        db.prepare(
+          "INSERT INTO metabank(bid, lastupdated) VALUES ((SELECT bid FROM guilds where uid = @uid AND gid = @gid), datetime('now'));"
+        ).run({ uid: userObject.id, gid: member.guild.id });
       });
 
       createUserTable(obj);
