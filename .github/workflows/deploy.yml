@@ -16,8 +16,10 @@ jobs:
       with:
         node-version: 17
         cache: yarn
-    - run: yarn
-    - run: yarn run lint
+    - name: install packages
+      run: yarn install
+    - name: run lint
+      run: yarn run lint
 
   deploy:
     name: deploy
