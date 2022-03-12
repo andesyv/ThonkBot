@@ -3,7 +3,7 @@ import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
 import { Logger } from 'winston';
 import { getUserPointsEntry, updatePoints } from '../../dbutils';
-import { getCommandArgs } from '../../utils';
+import { getCommandArgs, getNickname } from '../../utils';
 
 const gamble = (points: number, amount: number): [number, number] => {
   const r = Math.round(Math.random() * 100);
@@ -55,7 +55,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
           updatePoints(interaction.member, newPoints);
           return interaction.reply(
             formatReply(
-              interaction.member.nickname ?? interaction.member.user.tag,
+              getNickname(interaction.member, interaction.user),
               amount,
               roll,
               newPoints
@@ -98,7 +98,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
             updatePoints(message.member, newPoints);
             return message.reply(
               formatReply(
-                message.member.nickname ?? message.member.user.tag,
+                getNickname(message.member, message.author),
                 amount,
                 roll,
                 newPoints

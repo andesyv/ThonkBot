@@ -60,7 +60,8 @@ export const getNickname = (
   member: GuildMember | unknown,
   user: User
 ): string =>
-  (member instanceof GuildMember ? member.nickname : null) ?? user.tag;
+  (member instanceof GuildMember ? member.nickname : null) ??
+  user.tag.split('#')[0];
 
 export function splitToChunks<T>(components: T[], chunksize: number): T[][] {
   let result = [];

@@ -3,6 +3,7 @@ import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
 import { Christmas } from '../../data/christmas.json';
+import { getNickname } from '../utils';
 
 const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -23,11 +24,7 @@ const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
       const greeting = Christmas[Math.floor(Math.random() * Christmas.length)];
       const target = interaction.options.getMember('target');
       if (target instanceof GuildMember && !target.user.bot) {
-        const author =
-          interaction.member instanceof GuildMember &&
-          interaction.member.nickname
-            ? interaction.member.nickname
-            : interaction.user.tag;
+        const author = getNickname(interaction.member, interaction.user);
         void target.send(`${greeting} Best Regards ${author}!`);
         return interaction.reply({
           content: 'He/she/they liked it. (I think.)',
@@ -54,10 +51,7 @@ const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
       const target = message.mentions.members?.first();
       const greeting = Christmas[Math.floor(Math.random() * Christmas.length)];
       if (target && !target.user.bot) {
-        const author =
-          message.member instanceof GuildMember && message.member.nickname
-            ? message.member.nickname
-            : message.author.tag;
+        const author = getNickname(message.member, message.author);
         target.send(`${greeting} Best Regards ${author}!`);
       } else {
         return message.channel.send(greeting);

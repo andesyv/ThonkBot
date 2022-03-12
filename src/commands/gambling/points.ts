@@ -3,6 +3,7 @@ import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
 import { Logger } from 'winston';
 import { getUserPointsEntry } from '../../dbutils';
+import { getNickname } from '../../utils';
 
 const points: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -15,7 +16,7 @@ const points: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       if (interaction.member instanceof GuildMember) {
-        const name = interaction.member.nickname ?? interaction.user.tag;
+        const name = getNickname(interaction.member, interaction.user);
         const entry = await getUserPointsEntry(interaction.member);
         return interaction.reply(
           `*${name}* has *${entry.points}* sthonks:tm:.`
@@ -39,7 +40,7 @@ const points: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       if (message.member) {
-        const name = message.member.nickname ?? message.author.tag;
+        const name = getNickname(message.member, message.author);
         const entry = await getUserPointsEntry(message.member);
         return message.channel.send(
           `*${name}* has *${entry.points}* sthonks:tm:.`

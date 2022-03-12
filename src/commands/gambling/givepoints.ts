@@ -3,7 +3,7 @@ import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
 import { Logger } from 'winston';
 import { getUserPointsEntry, updatePoints } from '../../dbutils';
-import { getCommandArgs } from '../../utils';
+import { getCommandArgs, getNickname } from '../../utils';
 
 const parseNumber = (s: string): number | undefined => {
   const n = Number.parseInt(s);
@@ -43,8 +43,8 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
         } else if (!(target instanceof GuildMember)) {
           throw new Error('Somehow managed to target user not in guild');
         }
-        const authorName = interaction.member.nickname ?? interaction.user.tag;
-        const receiverName = target.nickname ?? target.user.tag;
+        const authorName = getNickname(interaction.member, interaction.user);
+        const receiverName = getNickname(target, target.user);
         const senderPoints = (await getUserPointsEntry(interaction.member))
           .points;
         if (senderPoints <= 0) {
@@ -101,8 +101,8 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
               return message.reply('You cannot give points to yourself!');
             }
 
-            const authorName = message.member.nickname ?? message.author.tag;
-            const receiverName = target.nickname ?? target.user.tag;
+            const authorName = getNickname(message.member, message.author);
+            const receiverName = getNickname(target, target.user);
             const senderPoints = (await getUserPointsEntry(message.member))
               .points;
 
