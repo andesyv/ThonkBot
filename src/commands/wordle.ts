@@ -93,7 +93,7 @@ const initateNewGame = (game_id: string, length = 5): Game => {
 };
 
 const gameIsWon = (game: Game): boolean =>
-  game.guesses[game.guesses.length] === game.word;
+  game.guesses[game.guesses.length - 1] === game.word;
 const gameIsOver = (game: Game): boolean =>
   gameIsWon(game) || game.guesses.length === game.max_guesses;
 
@@ -114,7 +114,7 @@ const buildEmbed = (game: Game, user: string): MessageEmbed => {
       : `Wordle game! (${game.word.length} letters)`,
     description:
       game.guesses[game.guesses.length - 1] === game.word
-        ? `${user} guessed the correct word, which was ${game.word}! Congrats!`
+        ? `${user} guessed the correct word, which was *${game.word}*! Congrats!`
         : game.guesses.length === 1
         ? `${user} started a new wordle game with ${game.word.length} letters and guessed *${game.guesses[0]}*!`
         : `${user} guessed the word *${
