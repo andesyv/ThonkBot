@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
+import { SlashCommandBuilder, time } from '@discordjs/builders';
 import {
   CommandInteraction,
   Client,
@@ -31,16 +31,8 @@ export const initWords = async (logger: Logger) => {
     );`
   ).run();
 
-  type QueryResp = { IsEmpty: number } | undefined;
-
   const tableIsEmpty =
-    (
-      db
-        .prepare(
-          'SELECT CASE WHEN EXISTS(SELECT * FROM words LIMIT 1) THEN 0 ELSE 1 END AS IsEmpty'
-        )
-        .get() as QueryResp
-    )?.IsEmpty ?? true;
+    db.prepare('SELECT * FROM words LIMIT 1').get() === undefined;
   if (tableIsEmpty) {
     logger.log('info', 'Rebuilding dictionary database');
     const { data } = await axios.get<Record<string, number>>(DICTIONARY_URL, {
@@ -65,10 +57,20 @@ interface Game {
   word: string;
   guesses: string[];
   max_guesses: number;
-  timeout: NodeJS.Timeout;
+  timeout?: NodeJS.Timeout;
 }
 
 const games: Record<string, Game | undefined> = {};
+
+const resetTimeout = (id: string) => {
+  const game = games[id];
+  if (game === undefined) return;
+
+  if (game.timeout) clearTimeout(game.timeout);
+  game.timeout = setTimeout(() => {
+    games[id] = undefined;
+  }, 10 * 60 * 1000);
+};
 
 const initateNewGame = (game_id: string, length = 5): Game => {
   const random_word = db
@@ -80,12 +82,10 @@ const initateNewGame = (game_id: string, length = 5): Game => {
     const game = {
       word: random_word.word,
       guesses: [],
-      max_guesses: 6,
-      timeout: setTimeout(() => {
-        games[game_id] = undefined;
-      }, 10 * 60 * 1000)
+      max_guesses: 6
     };
     games[game_id] = game;
+    resetTimeout(game_id);
     return game;
   } else {
     throw new Error(`Failed to find word with length of ${length}`);
@@ -117,7 +117,7 @@ const buildEmbed = (game: Game, user: string): MessageEmbed => {
         ? `${user} guessed the correct word, which was ${game.word}! Congrats!`
         : game.guesses.length === 1
         ? `${user} started a new wordle game with ${game.word.length} letters and guessed *${game.guesses[0]}*!`
-        : `${user} guessed the word the word *${
+        : `${user} guessed the word *${
             game.guesses[game.guesses.length - 1]
           }*!`,
     footer:
@@ -132,7 +132,7 @@ const buildEmbed = (game: Game, user: string): MessageEmbed => {
 const buildComponents = (game: Game): MessageActionRow[] => {
   const game_lost = !gameIsWon(game) && gameIsOver(game);
   let btn_id = 0;
-  let total_indices_found = new Set<number>();
+  const total_indices_found = new Set<number>();
   const components = game.guesses.map((guess) => {
     const guessed_letters = new Set<string>();
     const row = new MessageActionRow({
@@ -201,13 +201,23 @@ const wordle: ICommandBase & ISlashCommand = {
   ): Promise<unknown> => {
     try {
       const guess = interaction.options.getString('guess', true).toLowerCase();
-      const word_len = interaction.options.getNumber('length') ?? 5;
+      const word_len = interaction.options.getInteger('length') ?? 5;
 
       if (interaction.guild instanceof Guild) {
         const user = getNickname(interaction.member, interaction.user);
-        const game =
-          games[interaction.guild.id] ??
-          initateNewGame(interaction.guild.id, word_len);
+        let game = games[interaction.guild.id];
+        try {
+          if (game === undefined)
+            game = initateNewGame(interaction.guild.id, word_len);
+        } catch (e) {
+          await interaction.reply({
+            content:
+              "Could'nt find a word to start a wordle game. Try a different word-length.",
+            ephemeral: true
+          });
+          throw e;
+        }
+
         if (guess.length !== game.word.length) {
           return interaction.reply({
             content: `Your guessed word has to be of the same length as the secret word, which is ${game.word.length}. I won't count this guess.`,
@@ -235,15 +245,7 @@ const wordle: ICommandBase & ISlashCommand = {
         if (gameIsOver(game)) {
           games[interaction.guild.id] = undefined;
         } else {
-          game.timeout = setTimeout(() => {
-            if (interaction.guild instanceof Guild)
-              games[interaction.guild.id] = undefined;
-            else
-              logger.log(
-                'error',
-                'interaction.guild stopped being a guild for some reason?'
-              );
-          }, 10 * 60 * 1000);
+          resetTimeout(interaction.guild.id);
         }
 
         if (5 < components.length) {
@@ -268,7 +270,8 @@ const wordle: ICommandBase & ISlashCommand = {
         return interaction.reply('Command is only available in a server. :(');
       }
     } catch (e) {
-      logger.log('error', e);
+      if (e instanceof Error)
+        logger.log('error', `name: ${e.name}, message: ${e.message}`);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
