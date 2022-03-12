@@ -184,13 +184,15 @@ const wordle: ICommandBase & ISlashCommand = {
     .addStringOption((opt) =>
       opt.setName('guess').setDescription('Your guess').setRequired(true)
     )
-    .addNumberOption((opt) =>
+    .addIntegerOption((opt) =>
       opt
         .setName('length')
         .setDescription(
           'The desired length of the word. (only used when starting a new game)'
         )
         .setRequired(false)
+        .setMinValue(1)
+        .setMaxValue(5)
     ),
   handleInteraction: async (
     interaction: CommandInteraction,
@@ -199,14 +201,7 @@ const wordle: ICommandBase & ISlashCommand = {
   ): Promise<unknown> => {
     try {
       const guess = interaction.options.getString('guess', true).toLowerCase();
-      const word_len = interaction.options.getNumber('length') ?? undefined;
-
-      if (word_len)
-        return interaction.reply({
-          content:
-            'Words longer than 5 letters are unfortunately not supported',
-          ephemeral: true
-        });
+      const word_len = interaction.options.getNumber('length') ?? 5;
 
       if (interaction.guild instanceof Guild) {
         const user = getNickname(interaction.member, interaction.user);
