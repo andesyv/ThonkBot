@@ -15,7 +15,7 @@ const randomthonk: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       return interaction.reply(
-        await randomImageToEmbed('ThonkEmojis', 'Random thonk')
+        await randomImageToEmbed('data/ThonkEmojis', 'Random thonk')
       );
     } catch (e) {
       logger.log('error', e);
@@ -33,7 +33,7 @@ const randomthonk: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       return message.channel.send(
-        await randomImageToEmbed('ThonkEmojis', 'Random thonk')
+        await randomImageToEmbed('data/ThonkEmojis', 'Random thonk')
       );
     } catch (e) {
       logger.log('error', e);

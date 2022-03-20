@@ -12,7 +12,7 @@ import * as path from 'path';
 export const getRandomAssetFileFromFolder = async (
   folder: string
 ): Promise<string> => {
-  const rootPath = path.join(process.cwd(), `data/${folder}`);
+  const rootPath = path.join(process.cwd(), folder);
   const files = await readdir(rootPath);
 
   if (Array.isArray(files) && 0 < files.length)

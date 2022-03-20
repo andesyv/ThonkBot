@@ -14,7 +14,7 @@ const anime: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return interaction.reply(await randomImageToEmbed('Anime', 'Weeb'));
+      return interaction.reply(await randomImageToEmbed('data/Anime', 'Weeb'));
     } catch (e) {
       logger.log('error', e);
       return interaction.reply({

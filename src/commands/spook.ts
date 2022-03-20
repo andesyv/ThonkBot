@@ -16,7 +16,7 @@ const sendPersonalSpook = async (
   target: GuildMember,
   sender: GuildMember | User
 ) => {
-  const { embeds, files } = await randomImageToEmbed('Spooks', 'Spooked!');
+  const { embeds, files } = await randomImageToEmbed('data/Spooks', 'Spooked!');
   const embed = (embeds as MessageEmbed[])[0].setFooter({
     text: `Spooked by ${
       sender instanceof GuildMember
@@ -61,7 +61,7 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
         });
       } else {
         return interaction.reply(
-          await randomImageToEmbed('Spooks', 'Spooked!')
+          await randomImageToEmbed('data/Spooks', 'Spooked!')
         );
       }
     } catch (e) {
@@ -90,7 +90,7 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
         );
       } else {
         return message.channel.send(
-          await randomImageToEmbed('Spooks', 'Spooked!')
+          await randomImageToEmbed('data/Spooks', 'Spooked!')
         );
       }
     } catch (e) {
