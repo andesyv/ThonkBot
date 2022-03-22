@@ -14,7 +14,9 @@ const pokemon: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return interaction.reply(await randomImageToEmbed('Pokemon', 'Pokémon'));
+      return interaction.reply(
+        await randomImageToEmbed('data/Pokemon', 'Pokémon')
+      );
     } catch (e) {
       logger.log('error', e);
       return interaction.reply({
@@ -31,7 +33,7 @@ const pokemon: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       return message.channel.send(
-        await randomImageToEmbed('Pokemon', 'Pokémon')
+        await randomImageToEmbed('data/Pokemon', 'Pokémon')
       );
     } catch (e) {
       logger.log('error', e);

@@ -14,7 +14,7 @@ const bird: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return interaction.reply(await randomImageToEmbed('Bird', 'Bird'));
+      return interaction.reply(await randomImageToEmbed('data/Bird', 'Bird'));
     } catch (e) {
       logger.log('error', e);
       return interaction.reply({
@@ -29,7 +29,9 @@ const bird: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(await randomImageToEmbed('Bird', 'Bird'));
+      return message.channel.send(
+        await randomImageToEmbed('data/Bird', 'Bird')
+      );
     } catch (e) {
       logger.log('error', e);
       return message.reply('Command failed. :(');

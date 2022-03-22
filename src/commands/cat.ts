@@ -14,7 +14,9 @@ const cat: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return interaction.reply(await randomImageToEmbed('Cats', 'Random cat'));
+      return interaction.reply(
+        await randomImageToEmbed('data/Cats', 'Random cat')
+      );
     } catch (e) {
       logger.log('error', e);
       return interaction.reply({
@@ -31,7 +33,7 @@ const cat: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       return message.channel.send(
-        await randomImageToEmbed('Cats', 'Random cat')
+        await randomImageToEmbed('data/Cats', 'Random cat')
       );
     } catch (e) {
       logger.log('error', e);
