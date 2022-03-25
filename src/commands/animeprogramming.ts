@@ -56,7 +56,10 @@ const animeprogramming: ICommandBase & ISlashCommand & IMessageCommand = {
         ? findLanguageFolder(language)
         : findRandomLanguageFolder());
       if (folder === undefined) {
-        return interaction.reply("Anime girls don't program that language.");
+        return interaction.reply({
+          content: "Anime girls don't program that language.",
+          ephemeral: true
+        });
       }
 
       return interaction.reply(
