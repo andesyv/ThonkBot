@@ -14,6 +14,7 @@ export interface ICommandBase {
   data:
     | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
     | SlashCommandSubcommandsOnlyBuilder;
+  init?: (client: BotClient, logger: Logger) => Promise<void>;
 }
 
 export interface ISlashCommand {

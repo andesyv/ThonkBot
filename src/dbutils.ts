@@ -20,6 +20,25 @@ export interface DBGuild {
   uid: string;
 }
 
+// https://stackoverflow.com/questions/45020874/typescript-wrapping-function-with-generic-type
+export const wrapDBThrowable = <T extends (...args: any[]) => any>(
+  func: T
+): T => {
+  return <T>((...args: any[]) => {
+    try {
+      return func(...args);
+    } catch (e) {
+      if (e instanceof SqliteError) {
+        throw new Error(
+          `DataBase error: { Name: ${e.name}, CODE: ${e.code}, MESSAGE: {${e.message}} }`
+        );
+      } else {
+        throw new Error(Object.toString.call(e));
+      }
+    }
+  });
+};
+
 export const initDB = () => {
   db.prepare(
     `CREATE TABLE IF NOT EXISTS bank (
