@@ -6,6 +6,7 @@ import {
   isMessageCommand,
   isSlashCommand
 } from './command';
+import { Job } from 'node-schedule';
 
 type CommandType =
   | ICommandBase
@@ -18,6 +19,7 @@ export default class BotClient extends Client {
     IMessageCommand &
     ISlashCommand)[];
   public readonly messageCommands: (ICommandBase & IMessageCommand)[];
+  public jobs: Job[] = [];
 
   public constructor(options: ClientOptions, commands: CommandType[]) {
     super(options);

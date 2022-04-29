@@ -23,7 +23,7 @@ interface DictEntry {
 const DICTIONARY_URL =
   'https://raw.githubusercontent.com/dwyl/english-words/master/words_dictionary.json';
 
-export const initWords = async (logger: Logger) => {
+export const initWords = async (client: Client, logger: Logger) => {
   db.prepare(
     `CREATE TABLE IF NOT EXISTS words (
       word TEXT PRIMARY KEY,
@@ -194,6 +194,7 @@ const wordle: ICommandBase & ISlashCommand = {
         .setMinValue(1)
         .setMaxValue(5)
     ),
+  init: initWords,
   handleInteraction: async (
     interaction: CommandInteraction,
     client: Client,

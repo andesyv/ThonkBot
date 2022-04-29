@@ -14,7 +14,6 @@ import {
 } from './command';
 import { initDB } from './dbutils';
 import BotClient from './client';
-import { initWords } from './commands/wordle';
 
 type CommandType =
   | ICommandBase
@@ -89,7 +88,13 @@ const init = async () => {
   // Client construction
   const client = new BotClient(
     {
-      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
+      intents: [
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MEMBERS,
+        Intents.FLAGS.DIRECT_MESSAGES,
+        Intents.FLAGS.DIRECT_MESSAGE_TYPING
+      ]
     },
     commands
   );
@@ -160,7 +165,10 @@ const init = async () => {
   // Initiate database
   initDB();
 
-  void initWords(logger);
+  // Optional initialization for commands
+  for (const command of commands) {
+    await command.init?.(client, logger);
+  }
 
   // Finalize initiation by logging in
   client.login(token);

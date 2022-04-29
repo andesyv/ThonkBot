@@ -8,6 +8,7 @@ import {
 } from 'discord.js';
 import { readdir } from 'fs/promises';
 import * as path from 'path';
+import { Logger } from 'winston';
 
 export const getRandomAssetFileFromFolder = async (
   folder: string
@@ -69,3 +70,7 @@ export function splitToChunks<T>(components: T[], chunksize: number): T[][] {
     result.push(components.slice(i, i + chunksize));
   return result;
 }
+
+// Small helper to format errors to winston loggers
+export const logError = (e: any, logger: Logger) =>
+  logger.log('error', e instanceof Error ? e.message : JSON.stringify(e));
