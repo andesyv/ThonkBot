@@ -35,7 +35,7 @@ export const initTable = async (logger: Logger) => {
           PRIMARY KEY (id, gid, type)
         );`
       ).run();
-    });
+    })();
   } catch (e) {
     logError(e, logger);
   }
