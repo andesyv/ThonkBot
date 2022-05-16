@@ -42,7 +42,10 @@ const manyspooks: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return interaction.reply(await fetchManySpooks());
+      if (interaction.user.id === '266967359342903316')
+        return interaction.reply("I'm sorry, everyone BUT you are allowed to use that command.");
+      else
+        return interaction.reply(await fetchManySpooks());
     } catch (e) {
       logger.log('error', e);
       return interaction.reply({
@@ -58,7 +61,10 @@ const manyspooks: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(await fetchManySpooks());
+      if (message.author.id === '266967359342903316')
+        return message.channel.send("I'm sorry, everyone BUT you are allowed to use that command.");
+      else
+        return message.channel.send(await fetchManySpooks());
     } catch (e) {
       logger.log('error', e);
       return message.reply('Command failed. :(');
