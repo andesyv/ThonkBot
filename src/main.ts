@@ -120,11 +120,6 @@ const init = async () => {
     try {
       if (message.author.bot) return;
 
-      if (message.author.id === '266967359342903316') {
-        message.author.send("I'm sorry, but you're not allowed to use the bot anymore. ;_;");
-        return;
-      }
-
       // Bot will listen for messages that starts with `!`
       if (message.content.startsWith('!')) {
         const args = message.content.substring(1).split(' ');
@@ -151,11 +146,6 @@ const init = async () => {
   client.on('interactionCreate', async (interaction) => {
     try {
       if (!interaction.isCommand()) return;
-
-      if (interaction.user.id === '266967359342903316') {
-        interaction.user.send("I'm sorry, but you're not allowed to use the bot anymore. ;_;");
-        return;
-      }
 
       for (const command of client.interactionCommands) {
         if (
