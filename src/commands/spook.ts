@@ -6,26 +6,59 @@ import {
   GuildMember,
   MessageEmbed,
   Guild,
-  User
+  User,
+  InteractionReplyOptions
 } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
 import { randomImageToEmbed } from '../utils';
+import axios from 'axios';
+import { giphy_key } from '../../config.json';
+
+interface SpookyApiResponse {
+  data: {
+    images: {
+      original: {
+        url: string;
+      };
+    };
+  };
+}
+
+const getRandomSpookEmbed = async (): Promise<MessageEmbed> => {
+  const api = await axios.get<SpookyApiResponse>(
+    `https://api.giphy.com/v1/gifs/random?tag=skeleton&api_key=${giphy_key}`
+  );
+
+  const url = api.data.data.images.original.url;
+  return new MessageEmbed()
+    .setColor('#0099ff')
+    .setImage(url)
+    .setTimestamp()
+    .setFooter({ text: 'Powered by Giphy' });
+};
 
 const sendPersonalSpook = async (
   target: GuildMember,
   sender: GuildMember | User
-) => {
-  const { embeds, files } = await randomImageToEmbed('data/Spooks', 'Spooked!');
-  const embed = (embeds as MessageEmbed[])[0].setFooter({
-    text: `Spooked by ${
-      sender instanceof GuildMember
-        ? sender.nickname ?? sender.user.username
-        : sender.username
-    }`
+): Promise<MessageEmbed> => {
+  const embed = await getRandomSpookEmbed();
+
+  await target.send({
+    embeds: [
+      embed.setTitle(
+        `Spooked by ${
+          sender instanceof GuildMember
+            ? sender.nickname ?? sender.user.username
+            : sender.username
+        }`
+      )
+    ]
   });
 
-  target.send({ embeds: [embed], files });
+  return embed.setTitle(
+    `Successfully spooked ${target.nickname ?? target.user.username} with this`
+  );
 };
 
 const getGuildUser = (
@@ -52,17 +85,14 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
       if (target instanceof GuildMember && !target.user.bot) {
         const author =
           getGuildUser(interaction.guild, interaction.user) ?? interaction.user;
-        sendPersonalSpook(target, author);
+        const embed = await sendPersonalSpook(target, author);
         return interaction.reply({
-          content: `Successfully spooked ${
-            target.nickname ?? target.user.username
-          }!`,
-          ephemeral: true
+          ephemeral: true,
+          embeds: [embed]
         });
       } else {
-        return interaction.reply(
-          await randomImageToEmbed('data/Spooks', 'Spooked!')
-        );
+        const embed = await getRandomSpookEmbed();
+        return interaction.reply({ embeds: [embed.setTitle('Spooked!')] });
       }
     } catch (e) {
       logger.log('error', e);
@@ -84,14 +114,16 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
         message.mentions.users.first()
       );
       if (mentioned !== undefined && !mentioned.user.bot) {
-        sendPersonalSpook(
+        const embed = await sendPersonalSpook(
           mentioned,
           getGuildUser(message.guild, message.author) ?? message.author
         );
+        message.author.send({ embeds: [embed] });
       } else {
-        return message.channel.send(
-          await randomImageToEmbed('data/Spooks', 'Spooked!')
-        );
+        const embed = await getRandomSpookEmbed();
+        return message.channel.send({
+          embeds: [embed.setTitle('Spooked!')]
+        });
       }
     } catch (e) {
       logger.log('error', e);
