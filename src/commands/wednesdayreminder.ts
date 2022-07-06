@@ -16,7 +16,7 @@ import { Logger } from 'winston';
 import { db, wrapDBThrowable } from '../dbutils';
 import * as path from 'path';
 import { logError } from '../utils';
-import { scheduleJob } from 'node-schedule';
+import { RecurrenceRule, scheduleJob } from 'node-schedule';
 
 interface DBEntry {
   id: string;
@@ -147,7 +147,7 @@ const fetchGuildMember = async (
 ): Promise<GuildMember | undefined> => {
   const guilds = await client.guilds.fetch();
 
-  for (let [_, resolvable] of guilds) {
+  for (const [_, resolvable] of guilds) {
     const guild = await resolvable.fetch();
     if (guild.available) {
       const members = await guild.members.fetch({ limit: 200 });
@@ -164,9 +164,11 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
     .setDescription('Toggle a reminder message for wednesdays'),
   init: async (client, logger) => {
     await initTable(logger);
-    client.jobs.push(
-      scheduleJob('0 12 * * 3', () => notifyWednesdays(client, logger))
-    );
+    const rule = new RecurrenceRule();
+    rule.hour = 12;
+    rule.dayOfWeek = 3; // 0-6 starting with wednesday
+    rule.tz = 'Europe/Amsterdam';
+    client.jobs.push(scheduleJob(rule, () => notifyWednesdays(client, logger)));
     logger.log('info', 'Setup wednesday notifier job');
   },
   handleInteraction: async (
