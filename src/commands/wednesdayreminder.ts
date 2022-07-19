@@ -1,15 +1,15 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import {
-  CommandInteraction,
   Client,
   Message,
-  MessageEmbed,
   GuildChannel,
   User,
   TextChannel,
   GuildMember,
   MessageOptions,
-  MessageAttachment
+  AttachmentBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction
 } from 'discord.js';
 import { ICommandBase, IMessageCommand, ISlashCommand } from '../command';
 import { Logger } from 'winston';
@@ -80,10 +80,10 @@ const toggleUser = (user: GuildMember) =>
 
 const buildMessageContent = (): MessageOptions => {
   const file = path.join(process.cwd(), 'data', 'wednesday.jpg');
-  const attachment = new MessageAttachment(file);
-  let embed = new MessageEmbed().setImage(
-    `attachment://${path.basename(file)}`
-  );
+  const attachment = new AttachmentBuilder(file);
+  const embed = new EmbedBuilder({
+    image: { url: `attachment://${path.basename(file)}` }
+  });
   return {
     embeds: [embed],
     files: [attachment]
@@ -100,7 +100,7 @@ const notifyWednesdays = async (client: Client, logger: Logger) => {
     const message = buildMessageContent();
     const ids = getAll();
 
-    for (let { id, gid, type } of ids) {
+    for (const { id, gid, type } of ids) {
       const guild = await client.guilds.fetch(gid);
       if (!guild.available) continue;
 
@@ -173,7 +173,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
     logger.log('info', 'Setup wednesday notifier job');
   },
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {

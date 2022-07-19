@@ -1,30 +1,29 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import {
-  CommandInteraction,
+  AttachmentBuilder,
+  ChatInputCommandInteraction,
   Client,
-  Message,
-  MessageOptions,
-  MessageAttachment
+  Message
 } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { shuffle } from '../utils';
+import { logError, SharedMessageOptions, shuffle } from '../utils';
 import * as path from 'path';
 import { readdir, stat } from 'fs/promises';
 
-const fetchManySpooks = async (): Promise<MessageOptions> => {
+const fetchManySpooks = async (): Promise<SharedMessageOptions> => {
   const dirpath = path.join(process.cwd(), 'data', 'Spooks');
   const files = shuffle(await readdir(dirpath));
   const discordFileSizeLimit = 8 * 1024 * 1024;
 
   let messageSize = 0;
-  const spooks: MessageAttachment[] = [];
+  const spooks: AttachmentBuilder[] = [];
   for (const file of files) {
     const filePath = path.join(dirpath, file);
     const { size } = await stat(filePath);
 
     if (spooks.length < 10 && messageSize + size < discordFileSizeLimit) {
-      spooks.push(new MessageAttachment(filePath));
+      spooks.push(new AttachmentBuilder(filePath));
       messageSize += size;
     }
   }
@@ -37,14 +36,14 @@ const manyspooks: ICommandBase & ISlashCommand & IMessageCommand = {
     .setName('manyspooks')
     .setDescription('Sends a lot of spooky images.'),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
     try {
       return interaction.reply(await fetchManySpooks());
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -60,7 +59,7 @@ const manyspooks: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       return message.channel.send(await fetchManySpooks());
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

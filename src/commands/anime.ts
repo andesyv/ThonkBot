@@ -1,22 +1,22 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message } from 'discord.js';
+import { Client, Message, ChatInputCommandInteraction } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { randomImageToEmbed } from '../utils';
+import { logError, randomImageToEmbed } from '../utils';
 
 const anime: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
     .setName('anime')
     .setDescription('Sends a random anime related image.'),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
     try {
       return interaction.reply(await randomImageToEmbed('data/Anime', 'Weeb'));
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -32,7 +32,7 @@ const anime: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       return message.channel.send(await randomImageToEmbed('Anime', 'Weeb'));
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

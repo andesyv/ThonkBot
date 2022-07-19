@@ -1,4 +1,9 @@
-import { Intents } from 'discord.js';
+import {
+  BaseInteraction,
+  ChatInputCommandInteraction,
+  GatewayIntentBits,
+  InteractionType
+} from 'discord.js';
 import winston from 'winston';
 import { token, clientId } from './../config.json';
 import { REST } from '@discordjs/rest';
@@ -14,11 +19,17 @@ import {
 } from './command';
 import { initDB } from './dbutils';
 import BotClient from './client';
+import { logError } from './utils';
 
 type CommandType =
   | ICommandBase
   | (ICommandBase & IMessageCommand)
   | (ICommandBase & IMessageCommand & ISlashCommand);
+
+const isApplicationInteraction = (
+  interaction: BaseInteraction
+): interaction is ChatInputCommandInteraction =>
+  interaction.type === InteractionType.ApplicationCommand;
 
 const fetchCommandPaths = async (root: string): Promise<string[]> => {
   return (
@@ -89,11 +100,11 @@ const init = async () => {
   const client = new BotClient(
     {
       intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MEMBERS,
-        Intents.FLAGS.DIRECT_MESSAGES,
-        Intents.FLAGS.DIRECT_MESSAGE_TYPING
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageTyping
       ]
     },
     commands
@@ -138,14 +149,14 @@ const init = async () => {
         }
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
     }
   });
 
   // Interaction handling (new command system)
   client.on('interactionCreate', async (interaction) => {
     try {
-      if (!interaction.isCommand()) return;
+      if (!isApplicationInteraction(interaction)) return;
 
       for (const command of client.interactionCommands) {
         if (
@@ -158,7 +169,7 @@ const init = async () => {
         }
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
     }
   });
 

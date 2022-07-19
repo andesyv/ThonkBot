@@ -1,9 +1,14 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
+import {
+  Client,
+  Message,
+  GuildMember,
+  ChatInputCommandInteraction
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
 import { Logger } from 'winston';
 import { getUserPointsEntry, updatePoints } from '../../dbutils';
-import { getCommandArgs, getNickname } from '../../utils';
+import { getCommandArgs, getNickname, logError } from '../../utils';
 
 const parseNumber = (s: string): number | undefined => {
   const n = Number.parseInt(s);
@@ -28,13 +33,13 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
         .setRequired(true)
     ),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
     try {
       if (interaction.member instanceof GuildMember) {
-        const target = interaction.options.getMember('target', true);
+        const target = interaction.options.getMember('target');
         if (target === interaction.member) {
           return interaction.reply({
             content: 'You cannot give points to yourself!',
@@ -71,7 +76,7 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
         return interaction.reply('Command is only available in a server. :(');
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -125,7 +130,7 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
         return message.reply('Command is only available in a server. :(');
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

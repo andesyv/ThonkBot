@@ -1,16 +1,21 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
+import {
+  Client,
+  Message,
+  GuildMember,
+  ChatInputCommandInteraction
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
 import { Logger } from 'winston';
 import { getUserPointsEntry } from '../../dbutils';
-import { getNickname } from '../../utils';
+import { getNickname, logError } from '../../utils';
 
 const points: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
     .setName('points')
     .setDescription('Check how many points you currently have'),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -25,7 +30,7 @@ const points: ICommandBase & ISlashCommand & IMessageCommand = {
         return interaction.reply('Command is only available in a server. :(');
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -51,7 +56,7 @@ const points: ICommandBase & ISlashCommand & IMessageCommand = {
         );
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

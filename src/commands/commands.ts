@@ -3,6 +3,7 @@ import { Message } from 'discord.js';
 import { ICommandBase, IMessageCommand } from '../command';
 import { Logger } from 'winston';
 import BotClient from '../client';
+import { logError } from '../utils';
 
 const commands: ICommandBase & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -28,7 +29,7 @@ const commands: ICommandBase & IMessageCommand = {
         `All available commands and their aliases:\n${commands}`
       );
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

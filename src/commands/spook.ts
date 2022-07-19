@@ -1,19 +1,18 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import {
-  CommandInteraction,
   Client,
   Message,
   GuildMember,
-  MessageEmbed,
   Guild,
   User,
-  InteractionReplyOptions
+  EmbedBuilder,
+  ChatInputCommandInteraction
 } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { randomImageToEmbed } from '../utils';
 import axios from 'axios';
 import { giphy_key } from '../../config.json';
+import { logError } from '../utils';
 
 interface SpookyApiResponse {
   data: {
@@ -25,28 +24,31 @@ interface SpookyApiResponse {
   };
 }
 
-const getRandomSpookEmbed = async (): Promise<MessageEmbed> => {
+const getRandomSpookImageUrl = async (): Promise<string> => {
   const api = await axios.get<SpookyApiResponse>(
     `https://api.giphy.com/v1/gifs/random?tag=skeleton&api_key=${giphy_key}`
   );
-
-  const url = api.data.data.images.original.url;
-  return new MessageEmbed()
-    .setColor('#0099ff')
-    .setImage(url)
-    .setTimestamp()
-    .setFooter({ text: 'Powered by Giphy' });
+  return api.data.data.images.original.url;
 };
+
+const generateSpookEmbed = (url: string, title?: string): EmbedBuilder =>
+  new EmbedBuilder({
+    title: title,
+    image: { url: url },
+    timestamp: Date.now(),
+    footer: { text: 'Powered by Giphy' }
+  }).setColor('#0099ff');
 
 const sendPersonalSpook = async (
   target: GuildMember,
   sender: GuildMember | User
-): Promise<MessageEmbed> => {
-  const embed = await getRandomSpookEmbed();
+): Promise<EmbedBuilder> => {
+  const url = await getRandomSpookImageUrl();
 
   await target.send({
     embeds: [
-      embed.setTitle(
+      generateSpookEmbed(
+        url,
         `Spooked by ${
           sender instanceof GuildMember
             ? sender.nickname ?? sender.user.username
@@ -56,7 +58,8 @@ const sendPersonalSpook = async (
     ]
   });
 
-  return embed.setTitle(
+  return generateSpookEmbed(
+    url,
     `Successfully spooked ${target.nickname ?? target.user.username} with this`
   );
 };
@@ -76,7 +79,7 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
       opt.setName('target').setDescription('Person to spook').setRequired(false)
     ),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -91,11 +94,13 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
           embeds: [embed]
         });
       } else {
-        const embed = await getRandomSpookEmbed();
-        return interaction.reply({ embeds: [embed.setTitle('Spooked!')] });
+        const url = await getRandomSpookImageUrl();
+        return interaction.reply({
+          embeds: [generateSpookEmbed(url, 'Spooked!')]
+        });
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -120,13 +125,13 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
         );
         message.author.send({ embeds: [embed] });
       } else {
-        const embed = await getRandomSpookEmbed();
+        const url = await getRandomSpookImageUrl();
         return message.channel.send({
-          embeds: [embed.setTitle('Spooked!')]
+          embeds: [generateSpookEmbed(url, 'Spooked!')]
         });
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

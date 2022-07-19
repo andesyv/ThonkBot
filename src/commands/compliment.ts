@@ -1,8 +1,14 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
+import {
+  Client,
+  Message,
+  GuildMember,
+  ChatInputCommandInteraction
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
 import { Compliments } from '../../data/compliments.json';
+import { logError } from '../utils';
 
 const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -15,7 +21,7 @@ const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
         .setRequired(false)
     ),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -33,7 +39,7 @@ const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
         return interaction.reply(compliment);
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -56,7 +62,7 @@ const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
         return message.channel.send(compliment);
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

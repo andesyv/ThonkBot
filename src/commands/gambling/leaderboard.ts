@@ -1,15 +1,21 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
+import {
+  Client,
+  Message,
+  GuildMember,
+  ChatInputCommandInteraction
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
 import { Logger } from 'winston';
 import { getLeaderboards } from '../../dbutils';
+import { logError } from '../../utils';
 
 const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
     .setName('pointsleaderboard')
     .setDescription("Check this guild's current rankings"),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -24,7 +30,7 @@ const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
         return interaction.reply('Command is only available in a server. :(');
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -49,7 +55,7 @@ const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
         );
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

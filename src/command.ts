@@ -6,7 +6,7 @@ import {
   SlashCommandBuilder,
   SlashCommandSubcommandsOnlyBuilder
 } from '@discordjs/builders';
-import { CommandInteraction, Message } from 'discord.js';
+import { ChatInputCommandInteraction, Message } from 'discord.js';
 import { Logger } from 'winston';
 import BotClient from './client';
 
@@ -19,7 +19,7 @@ export interface ICommandBase {
 
 export interface ISlashCommand {
   handleInteraction(
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: BotClient,
     logger: Logger
   ): Promise<unknown>;

@@ -1,6 +1,6 @@
 import SQLite, { SqliteError } from 'better-sqlite3';
 import * as dateFns from 'date-fns';
-import { Guild, GuildMember, MessageEmbed } from 'discord.js';
+import { EmbedBuilder, Guild, GuildMember } from 'discord.js';
 export const db = new SQLite('./db.sqlite');
 
 export interface DBBank {
@@ -143,7 +143,7 @@ export const updatePoints = ({ id, guild }: GuildMember, points: number) => {
 
 export const getLeaderboards = async (
   guild: Guild
-): Promise<MessageEmbed | undefined> => {
+): Promise<EmbedBuilder | undefined> => {
   const guilds = (
     await Promise.all(
       db
@@ -175,6 +175,9 @@ export const getLeaderboards = async (
         )}\t (**${points}** sthonks)`;
       })
       .join('\n');
-    return new MessageEmbed().setTitle('Leaderboards').setDescription(desc);
+    return new EmbedBuilder({
+      title: 'Leaderboards',
+      description: desc
+    });
   }
 };

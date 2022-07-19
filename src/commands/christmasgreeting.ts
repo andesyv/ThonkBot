@@ -1,9 +1,14 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
+import {
+  Client,
+  Message,
+  GuildMember,
+  ChatInputCommandInteraction
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
 import { Christmas } from '../../data/christmas.json';
-import { getNickname } from '../utils';
+import { getNickname, logError } from '../utils';
 
 const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -16,7 +21,7 @@ const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
         .setRequired(false)
     ),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -34,7 +39,7 @@ const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
         interaction.reply(greeting);
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -57,7 +62,7 @@ const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
         return message.channel.send(greeting);
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

@@ -1,19 +1,19 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import {
-  CommandInteraction,
   Client,
   Message,
   Guild,
-  MessageEmbed,
-  MessageButton,
-  MessageActionRow,
-  MessageButtonStyleResolvable
+  EmbedBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  ChatInputCommandInteraction
 } from 'discord.js';
 import { ICommandBase, ISlashCommand } from '../command';
 import { Logger } from 'winston';
 import { db } from '../dbutils';
 import axios from 'axios';
-import { getNickname, splitToChunks } from '../utils';
+import { getNickname, logError, splitToChunks } from '../utils';
 
 interface DictEntry {
   word: string;
@@ -102,11 +102,11 @@ const isWord = (word: string): boolean =>
     .prepare('SELECT * FROM words WHERE word = @word LIMIT 1')
     .get({ word: word }) !== undefined;
 
-const buildEmbed = (game: Game, user: string): MessageEmbed => {
+const buildEmbed = (game: Game, user: string): EmbedBuilder => {
   const game_won = gameIsWon(game);
   const game_lost = !game_won && gameIsOver(game);
 
-  return new MessageEmbed({
+  return new EmbedBuilder({
     title: game_won
       ? `:tada: You won the ${game.word.length} letter wordle game! :tada:`
       : game_lost
@@ -129,15 +129,15 @@ const buildEmbed = (game: Game, user: string): MessageEmbed => {
   });
 };
 
-const buildComponents = (game: Game): MessageActionRow[] => {
+const buildComponents = (game: Game): ActionRowBuilder<ButtonBuilder>[] => {
   const game_lost = !gameIsWon(game) && gameIsOver(game);
   let btn_id = 0;
   const total_indices_found = new Set<number>();
   const components = game.guesses.map((guess) => {
     const guessed_letters = new Set<string>();
-    const row = new MessageActionRow({
+    const row = new ActionRowBuilder<ButtonBuilder>({
       components: Array.from(guess).map((c, i) => {
-        let style: MessageButtonStyleResolvable = 'SECONDARY';
+        let style = ButtonStyle.Secondary;
         const index = game.word.indexOf(c);
         // If guess[index] === c, it means there's a better alternative later in the guess. Skip highlihting this letter
         if (
@@ -146,10 +146,10 @@ const buildComponents = (game: Game): MessageActionRow[] => {
           (i === index || guess[index] !== c)
         ) {
           if (index === i) total_indices_found.add(i);
-          style = index === i ? 'SUCCESS' : 'PRIMARY';
+          style = index === i ? ButtonStyle.Success : ButtonStyle.Primary;
           guessed_letters.add(c);
         }
-        return new MessageButton({
+        return new ButtonBuilder({
           customId: `placeholder_button_${++btn_id}`,
           label: c,
           disabled: true,
@@ -161,14 +161,16 @@ const buildComponents = (game: Game): MessageActionRow[] => {
   });
   if (game_lost) {
     components.push(
-      new MessageActionRow({
+      new ActionRowBuilder({
         components: Array.from(game.word).map(
           (c, i) =>
-            new MessageButton({
+            new ButtonBuilder({
               customId: `placeholder_button_${++btn_id}`,
               label: c,
               disabled: true,
-              style: total_indices_found.has(i) ? 'SUCCESS' : 'DANGER'
+              style: total_indices_found.has(i)
+                ? ButtonStyle.Success
+                : ButtonStyle.Danger
             })
         )
       })
@@ -196,7 +198,7 @@ const wordle: ICommandBase & ISlashCommand = {
     ),
   init: initWords,
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -271,8 +273,7 @@ const wordle: ICommandBase & ISlashCommand = {
         return interaction.reply('Command is only available in a server. :(');
       }
     } catch (e) {
-      if (e instanceof Error)
-        logger.log('error', `name: ${e.name}, message: ${e.message}`);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true

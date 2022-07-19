@@ -1,9 +1,8 @@
 import {
+  AttachmentBuilder,
+  EmbedBuilder,
   GuildMember,
   Message,
-  MessageAttachment,
-  MessageEmbed,
-  MessageOptions,
   User
 } from 'discord.js';
 import { readdir } from 'fs/promises';
@@ -22,16 +21,21 @@ export const getRandomAssetFileFromFolder = async (
   throw new Error(`Could'nt find a random file in folder ${folder}`);
 };
 
+export interface SharedMessageOptions {
+  embeds?: EmbedBuilder[];
+  files?: AttachmentBuilder[];
+}
+
 export const randomImageToEmbed = async (
   folder: string,
   title?: string
-): Promise<MessageOptions> => {
+): Promise<SharedMessageOptions> => {
   const file = await getRandomAssetFileFromFolder(folder);
-  const attachment = new MessageAttachment(file);
-  let embed = new MessageEmbed().setImage(
-    `attachment://${path.basename(file)}`
-  );
-  if (title !== undefined) embed = embed.setTitle(title);
+  const attachment = new AttachmentBuilder(file);
+  const embed = new EmbedBuilder({
+    title: title ?? undefined,
+    image: { url: `attachment://${path.basename(file)}` }
+  });
   return {
     embeds: [embed],
     files: [attachment]
@@ -65,7 +69,7 @@ export const getNickname = (
   user.tag.split('#')[0];
 
 export function splitToChunks<T>(components: T[], chunksize: number): T[][] {
-  let result = [];
+  const result = [];
   for (let i = 0; i < components.length; i += chunksize)
     result.push(components.slice(i, i + chunksize));
   return result;

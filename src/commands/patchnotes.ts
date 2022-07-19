@@ -1,11 +1,16 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message, MessageEmbed } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  Client,
+  EmbedBuilder,
+  Message
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { getCommandArgs } from '../utils';
+import { getCommandArgs, logError } from '../utils';
 import { request } from '@octokit/request';
 
-const getLastCommits = async (count: number): Promise<MessageEmbed[]> => {
+const getLastCommits = async (count: number): Promise<EmbedBuilder[]> => {
   const dunno = '¯\\_(ツ)_/¯';
   const { status, data } = await request('GET /repos/{owner}/{repo}/commits', {
     owner: 'andesyv',
@@ -17,15 +22,17 @@ const getLastCommits = async (count: number): Promise<MessageEmbed[]> => {
     return data.map(({ commit, html_url, author }) => {
       const [title, ...body] = commit.message.split('\n');
       const date = commit.author?.date;
-      const embed = new MessageEmbed()
-        .setTitle(title)
-        .setURL(html_url)
-        .setFooter({
+      const embed = new EmbedBuilder({
+        title: title,
+        url: html_url,
+        footer: {
           text: commit.author?.name ?? dunno,
           iconURL: author?.avatar_url
-        })
-        .setTimestamp(date !== undefined ? new Date(date) : undefined);
-      return 0 < body.length ? embed.setDescription(body.join('\n')) : embed;
+        },
+        timestamp: date !== undefined ? Date.parse(date) : undefined,
+        description: 0 < body.length ? body.join('\n') : undefined
+      });
+      return embed;
     });
   }
   throw new Error("Could'nt fetch commits");
@@ -44,7 +51,7 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
         .setRequired(false)
     ),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -57,7 +64,7 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
         embeds: embeds
       });
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -80,7 +87,7 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
         embeds: embeds
       });
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

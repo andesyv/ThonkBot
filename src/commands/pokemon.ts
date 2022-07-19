@@ -1,15 +1,15 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message } from 'discord.js';
+import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
-import { randomImageToEmbed } from '../utils';
+import { logError, randomImageToEmbed } from '../utils';
 
 const pokemon: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
     .setName('pokemon')
     .setDescription('Sends a random image of a pokemon.'),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -18,7 +18,7 @@ const pokemon: ICommandBase & ISlashCommand & IMessageCommand = {
         await randomImageToEmbed('data/Pokemon', 'Pokémon')
       );
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -36,7 +36,7 @@ const pokemon: ICommandBase & ISlashCommand & IMessageCommand = {
         await randomImageToEmbed('data/Pokemon', 'Pokémon')
       );
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

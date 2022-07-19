@@ -1,15 +1,16 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message } from 'discord.js';
+import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
 import { Logger } from 'winston';
 import { LOTR as quotes } from '../../data/quotes.json';
+import { logError } from '../utils';
 
 const lotr: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
     .setName('lotr')
     .setDescription('Random LOTR quote'),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -18,7 +19,7 @@ const lotr: ICommandBase & ISlashCommand & IMessageCommand = {
         quotes[Math.floor(Math.random() * quotes.length)]
       );
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -36,7 +37,7 @@ const lotr: ICommandBase & ISlashCommand & IMessageCommand = {
         quotes[Math.floor(Math.random() * quotes.length)]
       );
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }

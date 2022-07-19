@@ -1,9 +1,14 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, Client, Message, GuildMember } from 'discord.js';
+import {
+  Client,
+  Message,
+  GuildMember,
+  ChatInputCommandInteraction
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
 import { Logger } from 'winston';
 import { getUserPointsEntry, updatePoints } from '../../dbutils';
-import { getCommandArgs, getNickname } from '../../utils';
+import { getCommandArgs, getNickname, logError } from '../../utils';
 
 const gamble = (points: number, amount: number): [number, number] => {
   const r = Math.round(Math.random() * 100);
@@ -36,7 +41,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
         .setRequired(true)
     ),
   handleInteraction: async (
-    interaction: CommandInteraction,
+    interaction: ChatInputCommandInteraction,
     client: Client,
     logger: Logger
   ): Promise<unknown> => {
@@ -66,7 +71,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
         return interaction.reply('Command is only available in a server. :(');
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
         ephemeral: true
@@ -116,7 +121,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
         );
       }
     } catch (e) {
-      logger.log('error', e);
+      logError(e, logger);
       return message.reply('Command failed. :(');
     }
   }
