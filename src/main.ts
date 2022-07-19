@@ -104,7 +104,7 @@ const init = async () => {
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.DirectMessageTyping
+        GatewayIntentBits.MessageContent
       ]
     },
     commands
@@ -122,7 +122,7 @@ const init = async () => {
   // Interaction registration:
   const rest = new REST({ version: '9' }).setToken(token);
   await rest.put(Routes.applicationCommands(clientId), {
-    body: client.interactionCommands.map((c) => c.data.toJSON())
+    body: [...client.interactionCommands.values()].map((c) => c.data.toJSON())
   });
   logger.log('info', 'Successfully registered application commands.');
 
@@ -134,18 +134,13 @@ const init = async () => {
       // Bot will listen for messages that starts with `!`
       if (message.content.startsWith('!')) {
         const args = message.content.substring(1).split(' ');
-        const cmd = args[0].toUpperCase();
+        const cmd = args[0].toLowerCase();
 
-        for (const command of client.messageCommands) {
-          if (
-            isMessageCommand(command) &&
-            (command.data.name.toUpperCase() === cmd ||
-              command.aliases?.map((c) => c.toUpperCase()).includes(cmd))
-          ) {
-            logger.log('info', `Command ${command.data.name} executed`);
-            await command.handleMessage(message, client, logger);
-            return;
-          }
+        const command = client.messageCommands.get(cmd);
+        if (command !== undefined) {
+          logger.log('info', `Command ${command.data.name} executed`);
+          await command.handleMessage(message, client, logger);
+          return;
         }
       }
     } catch (e) {
@@ -158,15 +153,10 @@ const init = async () => {
     try {
       if (!isApplicationInteraction(interaction)) return;
 
-      for (const command of client.interactionCommands) {
-        if (
-          isSlashCommand(command) &&
-          command.data.name === interaction.commandName
-        ) {
-          logger.log('info', `Interaction ${command.data.name} executed`);
-          await command.handleInteraction(interaction, client, logger);
-          return;
-        }
+      const command = client.interactionCommands.get(interaction.commandName);
+      if (command !== undefined) {
+        logger.log('info', `Interaction ${command.data.name} executed`);
+        await command.handleInteraction(interaction, client, logger);
       }
     } catch (e) {
       logError(e, logger);

@@ -16,13 +16,7 @@ const commands: ICommandBase & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      const commands = [
-        ...client.messageCommands.map(({ data, aliases }) => [
-          data.name,
-          ...(aliases ?? [])
-        ])
-      ]
-        .flat()
+      const commands = [...client.messageCommands.keys()]
         .map((s) => `\`${s}\``)
         .join(', ');
       return message.channel.send(

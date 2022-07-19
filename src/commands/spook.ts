@@ -53,7 +53,7 @@ const sendPersonalSpook = async (
           sender instanceof GuildMember
             ? sender.nickname ?? sender.user.username
             : sender.username
-        }`
+        }!`
       )
     ]
   });
@@ -86,11 +86,12 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       const target = interaction.options.getMember('target');
       if (target instanceof GuildMember && !target.user.bot) {
+        await interaction.deferReply({ ephemeral: true });
+
         const author =
           getGuildUser(interaction.guild, interaction.user) ?? interaction.user;
         const embed = await sendPersonalSpook(target, author);
-        return interaction.reply({
-          ephemeral: true,
+        return interaction.editReply({
           embeds: [embed]
         });
       } else {
