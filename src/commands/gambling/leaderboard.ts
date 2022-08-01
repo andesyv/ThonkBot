@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.js';
 import { Logger } from 'winston';
-import { getLeaderboards } from '../../dbutils';
-import { logError } from '../../utils';
+import { getLeaderboards } from '../../dbutils.js';
+import { logError } from '../../utils.js';
 
 const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()

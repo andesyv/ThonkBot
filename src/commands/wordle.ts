@@ -9,11 +9,11 @@ import {
   ActionRowBuilder,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand } from '../command';
+import { ICommandBase, ISlashCommand } from '../command.js';
 import { Logger } from 'winston';
-import { db } from '../dbutils';
-import axios from 'axios';
-import { getNickname, logError, splitToChunks } from '../utils';
+import { db } from '../dbutils.js';
+import { default as axios } from 'axios';
+import { getNickname, logError, splitToChunks } from '../utils.js';
 
 interface DictEntry {
   word: string;

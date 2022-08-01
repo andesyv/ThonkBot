@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.js';
 import { Logger } from 'winston';
-import { getUserPointsEntry, updatePoints } from '../../dbutils';
-import { getCommandArgs, getNickname, logError } from '../../utils';
+import { getUserPointsEntry, updatePoints } from '../../dbutils.js';
+import { getCommandArgs, getNickname, logError } from '../../utils.js';
 
 const gamble = (points: number, amount: number): [number, number] => {
   const r = Math.round(Math.random() * 100);

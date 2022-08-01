@@ -5,10 +5,10 @@ import {
   Client,
   Message
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
 import * as path from 'path';
-import { logError } from '../utils';
+import { logError } from '../utils.js';
 
 const thonk: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()

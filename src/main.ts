@@ -5,21 +5,16 @@ import {
   InteractionType
 } from 'discord.js';
 import winston from 'winston';
-import { token, clientId } from './../config.json';
+import config from '../config.json' assert { type: 'json' };
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { readdir, stat } from 'fs/promises';
 import * as path from 'path';
-import {
-  ICommandBase,
-  IMessageCommand,
-  ISlashCommand,
-  isMessageCommand,
-  isSlashCommand
-} from './command';
-import { initDB } from './dbutils';
-import BotClient from './client';
-import { logError } from './utils';
+import { ICommandBase, IMessageCommand, ISlashCommand } from './command.js';
+import { initDB } from './dbutils.js';
+import BotClient from './client.js';
+import { logError } from './utils.js';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 type CommandType =
   | ICommandBase
@@ -47,13 +42,19 @@ const fetchCommandPaths = async (root: string): Promise<string[]> => {
 };
 
 const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
+  const dirname = path.dirname(fileURLToPath(import.meta.url));
   const commandPaths = await fetchCommandPaths(
-    path.join(__dirname, 'commands')
+    path.normalize(path.join(dirname, 'commands'))
   );
   return Promise.all(
     commandPaths.map(async (filePath): Promise<CommandType> => {
-      logger.log('info', `Loading command ${path.basename(filePath)}`);
-      return (await import(filePath)).default;
+      logger.log(
+        'info',
+        `Loading command ${path.basename(filePath)} with path ${pathToFileURL(
+          filePath
+        )}`
+      );
+      return (await import(pathToFileURL(filePath).href)).default;
     })
   );
 };
@@ -120,8 +121,8 @@ const init = async () => {
   });
 
   // Interaction registration:
-  const rest = new REST({ version: '9' }).setToken(token);
-  await rest.put(Routes.applicationCommands(clientId), {
+  const rest = new REST({ version: '9' }).setToken(config.token);
+  await rest.put(Routes.applicationCommands(config.clientId), {
     body: [...client.interactionCommands.values()].map((c) => c.data.toJSON())
   });
   logger.log('info', 'Successfully registered application commands.');
@@ -142,6 +143,8 @@ const init = async () => {
           await command.handleMessage(message, client, logger);
           return;
         }
+      } else {
+        client.messageEvents.forEach((e) => e(message));
       }
     } catch (e) {
       logError(e, logger);
@@ -172,7 +175,7 @@ const init = async () => {
   }
 
   // Finalize initiation by logging in
-  client.login(token);
+  client.login(config.token);
 };
 
 init();

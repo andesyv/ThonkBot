@@ -1,9 +1,9 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
 import { Interval, intervalToDuration, formatDistance } from 'date-fns';
-import { logError } from '../utils';
+import { logError } from '../utils.js';
 
 const percentageTowardsDate = (from: Date, to: Date): number => {
   const now = Date.now();

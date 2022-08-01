@@ -1,11 +1,11 @@
-import { Client, ClientOptions } from 'discord.js';
+import { Client, ClientOptions, Message } from 'discord.js';
 import {
   ICommandBase,
   IMessageCommand,
   ISlashCommand,
   isMessageCommand,
   isSlashCommand
-} from './command';
+} from './command.js';
 import { Job } from 'node-schedule';
 
 type CommandType =
@@ -21,6 +21,7 @@ export default class BotClient extends Client {
   >;
   public readonly messageCommands: Map<string, ICommandBase & IMessageCommand>;
   public jobs: Job[] = [];
+  public messageEvents: ((msg: Message) => void)[] = [];
 
   public constructor(options: ClientOptions, commands: CommandType[]) {
     super(options);

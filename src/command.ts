@@ -8,7 +8,7 @@ import {
 } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Message } from 'discord.js';
 import { Logger } from 'winston';
-import BotClient from './client';
+import BotClient from './client.js';
 
 export interface ICommandBase {
   data:

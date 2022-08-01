@@ -1,6 +1,8 @@
 import SQLite, { SqliteError } from 'better-sqlite3';
 import * as dateFns from 'date-fns';
-import { EmbedBuilder, Guild, GuildMember } from 'discord.js';
+import { EmbedBuilder, Guild, GuildChannel, GuildMember } from 'discord.js';
+import { Logger } from 'winston';
+import { logError } from './utils.js';
 export const db = new SQLite('./db.sqlite');
 
 export interface DBBank {
@@ -181,3 +183,82 @@ export const getLeaderboards = async (
     });
   }
 };
+
+export interface RecordDBEntry {
+  id: string;
+  gid: string;
+  type: number;
+}
+
+export const initRecordTable = async (table: string, logger: Logger) => {
+  try {
+    wrapDBThrowable(() => {
+      db.prepare(
+        `CREATE TABLE IF NOT EXISTS ${table} (
+          id TEXT NOT NULL,
+          gid TEXT NOT NULL,
+          type INTEGER NOT NULL,
+          PRIMARY KEY (id, gid, type)
+        );`
+      ).run();
+    })();
+  } catch (e) {
+    logError(e, logger);
+  }
+};
+
+export const removeRecordEntry = (
+  table: string,
+  id: string,
+  gid: string,
+  type: number
+) => {
+  db.prepare(
+    `DELETE FROM ${table} WHERE id = @id AND gid = @gid AND type = @type`
+  ).run({
+    id: id,
+    gid: gid,
+    type: type
+  });
+};
+
+export const addRecordEntry = (
+  table: string,
+  id: string,
+  gid: string,
+  type: number
+) => {
+  db.prepare(
+    `INSERT INTO ${table} (id, gid, type) VALUES(@id, @gid, @type)`
+  ).run({
+    id: id,
+    gid: gid,
+    type: type
+  });
+};
+
+export const toggleIdRecord = (
+  table: string,
+  id: string,
+  gid: string,
+  type: number
+): boolean => {
+  // Only filtering on ids for users so user ids are shared between guilds
+  const q =
+    type === 0
+      ? db.prepare(`SELECT * FROM ${table} WHERE id = @id AND gid = @gid`)
+      : db.prepare('SELECT * FROM frenchreactions WHERE id = @id');
+  const q_res: RecordDBEntry | undefined = q.get({ id: id, gid: gid });
+  const exists = q_res !== undefined;
+  if (exists) {
+    removeRecordEntry(table, id, gid, type);
+  } else {
+    addRecordEntry(table, id, gid, type);
+  }
+  return !exists;
+};
+
+export const toggleGuildRecord = (table: string, channel: GuildChannel) =>
+  wrapDBThrowable(toggleIdRecord)(table, channel.id, channel.guild.id, 0);
+export const toggleUserRecord = (table: string, user: GuildMember) =>
+  wrapDBThrowable(toggleIdRecord)(table, user.id, user.guild.id, 1);

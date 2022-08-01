@@ -2,81 +2,26 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import {
   Client,
   Message,
-  GuildChannel,
-  User,
   TextChannel,
-  GuildMember,
   MessageOptions,
   AttachmentBuilder,
   EmbedBuilder,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, IMessageCommand, ISlashCommand } from '../command';
+import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
 import { Logger } from 'winston';
-import { db, wrapDBThrowable } from '../dbutils';
+import {
+  db,
+  initRecordTable,
+  RecordDBEntry,
+  removeRecordEntry,
+  toggleGuildRecord,
+  toggleUserRecord,
+  wrapDBThrowable
+} from '../dbutils.js';
 import * as path from 'path';
-import { logError } from '../utils';
+import { fetchGuildMember, logError } from '../utils.js';
 import { RecurrenceRule, scheduleJob } from 'node-schedule';
-
-interface DBEntry {
-  id: string;
-  gid: string;
-  type: number;
-}
-
-export const initTable = async (logger: Logger) => {
-  try {
-    wrapDBThrowable(() => {
-      db.prepare(
-        `CREATE TABLE IF NOT EXISTS wednesdays (
-          id TEXT NOT NULL,
-          gid TEXT NOT NULL,
-          type INTEGER NOT NULL,
-          PRIMARY KEY (id, gid, type)
-        );`
-      ).run();
-    })();
-  } catch (e) {
-    logError(e, logger);
-  }
-};
-
-const removeEntry = (id: string, gid: string, type: number) => {
-  db.prepare(
-    'DELETE FROM wednesdays WHERE id = @id AND gid = @gid AND type = @type'
-  ).run({
-    id: id,
-    gid: gid,
-    type: type
-  });
-};
-
-const toggleId = (id: string, gid: string, type: number): boolean => {
-  // Only filtering on ids for users so user ids are shared between guilds
-  const q =
-    type === 0
-      ? db.prepare('SELECT * FROM wednesdays WHERE id = @id AND gid = @gid')
-      : db.prepare('SELECT * FROM wednesdays WHERE id = @id');
-  const q_res: DBEntry | undefined = q.get({ id: id, gid: gid });
-  const exists = q_res !== undefined;
-  if (exists) {
-    removeEntry(id, gid, type);
-  } else {
-    db.prepare(
-      'INSERT INTO wednesdays(id, gid, type) VALUES(@id, @gid, @type)'
-    ).run({
-      id: id,
-      gid: gid,
-      type: type
-    });
-  }
-  return !exists;
-};
-
-const toggleGuild = (channel: GuildChannel) =>
-  wrapDBThrowable(toggleId)(channel.id, channel.guild.id, 0);
-const toggleUser = (user: GuildMember) =>
-  wrapDBThrowable(toggleId)(user.id, user.guild.id, 1);
 
 const buildMessageContent = (): MessageOptions => {
   const file = path.join(process.cwd(), 'data', 'wednesday.jpg');
@@ -90,7 +35,7 @@ const buildMessageContent = (): MessageOptions => {
   };
 };
 
-const getAll = wrapDBThrowable((): DBEntry[] =>
+const getAll = wrapDBThrowable((): RecordDBEntry[] =>
   db.prepare('SELECT * FROM wednesdays').all()
 );
 
@@ -114,7 +59,7 @@ const notifyWednesdays = async (client: Client, logger: Logger) => {
             'info',
             `Removing { id: ${id}, gid: ${gid}, type: ${type}} as it was stale`
           );
-          removeEntry(id, gid, 0);
+          removeRecordEntry('wednesdays', id, gid, 0);
         }
       } else if (type === 1) {
         const users = await guild.members.fetch();
@@ -127,7 +72,7 @@ const notifyWednesdays = async (client: Client, logger: Logger) => {
             'info',
             `Removing { id: ${id}, gid: ${gid}, type: ${type}} as it was stale`
           );
-          removeEntry(id, gid, 1);
+          removeRecordEntry('wednesdays', id, gid, 1);
         }
       }
     }
@@ -136,34 +81,12 @@ const notifyWednesdays = async (client: Client, logger: Logger) => {
   }
 };
 
-/**
- * Attempts to look through all the guilds of the bot in search for a common guild with the user
- * @note This operation is very slow
- * @returns A GuildMember instance if a common guild was found, undefined if not
- */
-const fetchGuildMember = async (
-  client: Client,
-  user: User
-): Promise<GuildMember | undefined> => {
-  const guilds = await client.guilds.fetch();
-
-  for (const [_, resolvable] of guilds) {
-    const guild = await resolvable.fetch();
-    if (guild.available) {
-      const members = await guild.members.fetch({ limit: 200 });
-      const member = members.get(user.id);
-      if (member) return member;
-    }
-  }
-  return undefined;
-};
-
 const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
     .setName('remindwednesdays')
     .setDescription('Toggle a reminder message for wednesdays'),
   init: async (client, logger) => {
-    await initTable(logger);
+    await initRecordTable('wednesdays', logger);
     const rule = new RecurrenceRule();
     rule.tz = 'Europe/Amsterdam';
     rule.dayOfWeek = 3; // 0-6 starting with sunday
@@ -180,7 +103,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       if (interaction.guild) {
         if (interaction.channel instanceof TextChannel) {
-          const enabled = toggleGuild(interaction.channel);
+          const enabled = toggleGuildRecord('wednesdays', interaction.channel);
           return interaction.reply(
             enabled
               ? "I'll be sure to let everyone know!"
@@ -197,7 +120,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
         await interaction.deferReply();
         const member = await fetchGuildMember(client, interaction.user);
         if (member) {
-          const enabled = toggleUser(member);
+          const enabled = toggleUserRecord('wednesdays', member);
           return interaction.editReply(
             enabled
               ? "Okay, I'll be sure to let you know!"
@@ -230,7 +153,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       if (message.guild) {
         if (message.channel instanceof TextChannel) {
-          const enabled = toggleGuild(message.channel);
+          const enabled = toggleGuildRecord('wednesdays', message.channel);
           return message.channel.send(
             enabled
               ? "I'll be sure to let everyone know!"
@@ -245,7 +168,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
         // Apparantly this code never gets run because the bot won't respond to dms anymore (except for interactions)
         const member = await fetchGuildMember(client, message.author);
         if (member) {
-          const enabled = toggleUser(member);
+          const enabled = toggleUserRecord('wednesdays', member);
           return message.channel.send(
             enabled
               ? "Okay, I'll be sure to let you know!"

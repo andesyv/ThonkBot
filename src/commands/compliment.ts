@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { Compliments } from '../../data/compliments.json';
-import { logError } from '../utils';
+import compliments from '../../data/compliments.json' assert { type: 'json' };
+import { logError } from '../utils.js';
 
 const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -27,7 +27,9 @@ const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       const compliment =
-        Compliments[Math.floor(Math.random() * Compliments.length)];
+        compliments.Compliments[
+          Math.floor(Math.random() * compliments.Compliments.length)
+        ];
       const target = interaction.options.getMember('target');
       if (target instanceof GuildMember && !target.user.bot) {
         void target.send(compliment);
@@ -55,7 +57,9 @@ const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       const target = message.mentions.members?.first();
       const compliment =
-        Compliments[Math.floor(Math.random() * Compliments.length)];
+        compliments.Compliments[
+          Math.floor(Math.random() * compliments.Compliments.length)
+        ];
       if (target && !target.user.bot) {
         target.send(compliment);
       } else {

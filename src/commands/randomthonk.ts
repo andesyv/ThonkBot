@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { logError, randomImageToEmbed } from '../utils';
+import { logError, randomImageToEmbed } from '../utils.js';
 
 const randomthonk: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()

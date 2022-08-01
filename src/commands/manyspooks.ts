@@ -5,9 +5,9 @@ import {
   Client,
   Message
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { logError, SharedMessageOptions, shuffle } from '../utils';
+import { logError, SharedMessageOptions, shuffle } from '../utils.js';
 import * as path from 'path';
 import { readdir, stat } from 'fs/promises';
 

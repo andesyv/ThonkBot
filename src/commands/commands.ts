@@ -1,9 +1,9 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Message } from 'discord.js';
-import { ICommandBase, IMessageCommand } from '../command';
+import { ICommandBase, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import BotClient from '../client';
-import { logError } from '../utils';
+import BotClient from '../client.js';
+import { logError } from '../utils.js';
 
 const commands: ICommandBase & IMessageCommand = {
   data: new SlashCommandBuilder()

@@ -1,9 +1,9 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { MovieQuotes as quotes } from '../../data/quotes.json';
-import { logError } from '../utils';
+import quotes from '../../data/quotes.json' assert { type: 'json' };
+import { logError } from '../utils.js';
 
 const moviequote: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -16,7 +16,9 @@ const moviequote: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       return interaction.reply(
-        quotes[Math.floor(Math.random() * quotes.length)]
+        quotes.MovieQuotes[
+          Math.floor(Math.random() * quotes.MovieQuotes.length)
+        ]
       );
     } catch (e) {
       logError(e, logger);
@@ -34,7 +36,9 @@ const moviequote: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       return message.channel.send(
-        quotes[Math.floor(Math.random() * quotes.length)]
+        quotes.MovieQuotes[
+          Math.floor(Math.random() * quotes.MovieQuotes.length)
+        ]
       );
     } catch (e) {
       logError(e, logger);

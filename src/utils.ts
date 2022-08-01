@@ -1,5 +1,6 @@
 import {
   AttachmentBuilder,
+  Client,
   EmbedBuilder,
   GuildMember,
   Message,
@@ -78,3 +79,25 @@ export function splitToChunks<T>(components: T[], chunksize: number): T[][] {
 // Small helper to format errors to winston loggers
 export const logError = (e: any, logger: Logger) =>
   logger.log('error', e instanceof Error ? e.message : JSON.stringify(e));
+
+/**
+ * Attempts to look through all the guilds of the bot in search for a common guild with the user
+ * @note This operation is very slow
+ * @returns A GuildMember instance if a common guild was found, undefined if not
+ */
+export const fetchGuildMember = async (
+  client: Client,
+  user: User
+): Promise<GuildMember | undefined> => {
+  const guilds = await client.guilds.fetch();
+
+  for (const [_, resolvable] of guilds) {
+    const guild = await resolvable.fetch();
+    if (guild.available) {
+      const members = await guild.members.fetch({ limit: 200 });
+      const member = members.get(user.id);
+      if (member) return member;
+    }
+  }
+  return undefined;
+};

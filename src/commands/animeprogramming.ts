@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { getCommandArgs, logError, randomImageToEmbed } from '../utils';
+import { getCommandArgs, logError, randomImageToEmbed } from '../utils.js';
 import { readdir, stat } from 'fs/promises';
 import { join, basename } from 'path';
 

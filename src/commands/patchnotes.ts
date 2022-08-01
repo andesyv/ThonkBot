@@ -5,9 +5,9 @@ import {
   EmbedBuilder,
   Message
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { getCommandArgs, logError } from '../utils';
+import { getCommandArgs, logError } from '../utils.js';
 import { request } from '@octokit/request';
 
 const getLastCommits = async (count: number): Promise<EmbedBuilder[]> => {
