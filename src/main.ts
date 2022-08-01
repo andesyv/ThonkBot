@@ -48,12 +48,7 @@ const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
   );
   return Promise.all(
     commandPaths.map(async (filePath): Promise<CommandType> => {
-      logger.log(
-        'info',
-        `Loading command ${path.basename(filePath)} with path ${pathToFileURL(
-          filePath
-        )}`
-      );
+      logger.log('info', `Loading command ${path.basename(filePath)}`);
       return (await import(pathToFileURL(filePath).href)).default;
     })
   );
