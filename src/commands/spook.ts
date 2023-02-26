@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { default as axios } from 'axios';
+import axios from 'axios';
 import config from '../../config.json' assert { type: 'json' };
 import { logError } from '../utils.js';
 
