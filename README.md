@@ -19,9 +19,10 @@ request.
 
 ## Testing Environment
 
-If you want to test features before making a pull request or if you wan't to
+If you want to test features before making a pull request or if you want to
 host your own version of the bot, you'll have to create a bot instance and add
-it to a server where you have sufficient permissions.
+it to a server where you have sufficient permissions before running the bot as
+a Node.JS application.
 
 ### How do this?:
 
@@ -44,9 +45,32 @@ it to a server where you have sufficient permissions.
 8. Head to the _OAuth2_ -> _URL Generator_ tab
 9.  Mark the _bot_ and _applications.commands_ scopes, and any additional permissions you think you'll need (or just Administrator for everything). You may get error messages if attempting to perform actions the bot does not have access to.
 10.  Use the generated link to add your bot to a server.
-11.  Open a console in the root directory and run `yarn` in order to download and install all dependencies. (You can also do `npm install` or any other package manager if you don't like `yarn`)
-12. Finally run your application using `yarn start` / `npm start`.
+11. Install all the requirements for the bot. Below are some Linux instructions, but Windows follows a similar approach:
+```sh
+# Some Debian distros don't ship with the version of Node.JS used by the bot in their package managers, so to install Node.JS > 18 do this to fetch the package repos:
+curl -sL https://deb.nodesource.com/setup_18.x | sudo bash -
 
-# Licencing
+# Install Node.JS > 18
+sudo apt install -y nodejs
+
+# (Optional) Install node packages used by the project.:
+sudo npm install -g yarn typescript
+
+# Install required packages:
+yarn install # with yarn
+npm install # with NPM
+```
+12. Finally, run the application. If `node-dev` is installed (`npm install -g node-dev`) you can run the `start` script directly:
+```sh
+yarn start # Using yarn
+npm start # Using npm
+```
+or you can compile the typescript and run the JS instead:
+```sh
+tsc # requires TypeScript to be globally installed
+node ./dist/src/main.js
+```
+
+# Licensing
 
 The application is licenced under a standard [MIT license](LICENSE)
