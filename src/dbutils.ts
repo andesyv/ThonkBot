@@ -184,10 +184,15 @@ export const getLeaderboards = async (
   }
 };
 
+export enum RecordType {
+  Guild = 0,
+  User
+}
+
 export interface RecordDBEntry {
   id: string;
   gid: string;
-  type: number;
+  type: RecordType;
 }
 
 export const initRecordTable = async (table: string, logger: Logger) => {
@@ -211,7 +216,7 @@ export const removeRecordEntry = (
   table: string,
   id: string,
   gid: string,
-  type: number
+  type: RecordType
 ) => {
   db.prepare(
     `DELETE FROM ${table} WHERE id = @id AND gid = @gid AND type = @type`
@@ -226,7 +231,7 @@ export const addRecordEntry = (
   table: string,
   id: string,
   gid: string,
-  type: number
+  type: RecordType
 ) => {
   db.prepare(
     `INSERT INTO ${table} (id, gid, type) VALUES(@id, @gid, @type)`
@@ -241,13 +246,11 @@ export const toggleIdRecord = (
   table: string,
   id: string,
   gid: string,
-  type: number
+  type: RecordType
 ): boolean => {
   // Only filtering on ids for users so user ids are shared between guilds
-  const q =
-    type === 0
-      ? db.prepare(`SELECT * FROM ${table} WHERE id = @id AND gid = @gid`)
-      : db.prepare('SELECT * FROM frenchreactions WHERE id = @id');
+  const filter = type === RecordType.Guild ? "id = @id AND gid = @gid" : "id = @id";
+  const q = db.prepare(`SELECT * FROM ${table} WHERE ${filter}`);
   const q_res: RecordDBEntry | undefined = q.get({ id: id, gid: gid });
   const exists = q_res !== undefined;
   if (exists) {
@@ -259,6 +262,6 @@ export const toggleIdRecord = (
 };
 
 export const toggleGuildRecord = (table: string, channel: GuildChannel) =>
-  wrapDBThrowable(toggleIdRecord)(table, channel.id, channel.guild.id, 0);
+  wrapDBThrowable(toggleIdRecord)(table, channel.id, channel.guild.id, RecordType.Guild);
 export const toggleUserRecord = (table: string, user: GuildMember) =>
-  wrapDBThrowable(toggleIdRecord)(table, user.id, user.guild.id, 1);
+  wrapDBThrowable(toggleIdRecord)(table, user.id, user.guild.id, RecordType.User);

@@ -14,6 +14,7 @@ import {
   db,
   initRecordTable,
   RecordDBEntry,
+  RecordType,
   removeRecordEntry,
   toggleGuildRecord,
   toggleUserRecord,
@@ -46,35 +47,40 @@ const notifyWednesdays = async (client: Client, logger: Logger) => {
     const ids = getAll();
 
     for (const { id, gid, type } of ids) {
-      const guild = await client.guilds.fetch(gid);
-      if (!guild.available) continue;
-
-      if (type === 0) {
-        const channel = await guild.channels.fetch(id);
-        if (channel instanceof TextChannel) {
-          await channel.send(message);
-        } else {
-          // Remove stale records
-          logger.log(
-            'info',
-            `Removing { id: ${id}, gid: ${gid}, type: ${type}} as it was stale`
-          );
-          removeRecordEntry('wednesdays', id, gid, 0);
+      try {
+        const guild = await client.guilds.fetch(gid);
+        if (guild.available) {
+          if (type === RecordType.Guild) {
+            const channel = await guild.channels.fetch(id);
+            if (channel instanceof TextChannel) {
+              await channel.send(message);
+              continue;
+            }
+          } else if (type === RecordType.User) {
+            const users = await guild.members.fetch();
+            const user = users.get(id);
+            if (user && (user.presence?.status ?? 'dnd') !== 'dnd') {
+              await user.send(message);
+              continue;
+            }
+          }
         }
-      } else if (type === 1) {
-        const users = await guild.members.fetch();
-        const user = users.get(id);
-        if (user) {
-          if (user.presence?.status !== 'dnd') await user.send(message);
-        } else {
-          // Remove stale records
-          logger.log(
-            'info',
-            `Removing { id: ${id}, gid: ${gid}, type: ${type}} as it was stale`
-          );
-          removeRecordEntry('wednesdays', id, gid, 1);
-        }
+        
+        logger.log(
+          'info',
+          `Removing { id: ${id}, gid: ${gid}, type: ${type}} as it was stale`
+        );
+      } catch (e) {
+        logError(e, logger);
       }
+      
+      // Remove stale records
+      logger.log(
+        'info',
+        `Removing { id: ${id}, gid: ${gid}, type: ${type}} as it was stale`
+      );
+
+      removeRecordEntry('wednesdays', id, gid, type);
     }
   } catch (e) {
     logError(e, logger);
@@ -90,8 +96,8 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
     const rule = new RecurrenceRule();
     rule.tz = 'Europe/Amsterdam';
     rule.dayOfWeek = 3; // 0-6 starting with sunday
-    rule.hour = 12;
-    rule.minute = 0;
+    rule.hour = 20;
+    rule.minute = 51;
     client.jobs.push(scheduleJob(rule, () => notifyWednesdays(client, logger)));
     logger.log('info', 'Setup wednesday notifier job');
   },
@@ -132,7 +138,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
             `Failed to find common channel with user: ${interaction.user.tag} (${interaction.user.id})`
           );
           return interaction.editReply(
-            "You have to share a guild with me to use that command, and I could'nt find one. :/"
+            "You have to share a guild with me to use that command and I couldn't find one. :/"
           );
         }
       }
