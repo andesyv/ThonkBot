@@ -65,7 +65,7 @@ const notifyWednesdays = async (client: Client, logger: Logger) => {
             }
           }
         }
-        
+
         logger.log(
           'info',
           `Removing { id: ${id}, gid: ${gid}, type: ${type}} as it was stale`
@@ -96,8 +96,8 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
     const rule = new RecurrenceRule();
     rule.tz = 'Europe/Amsterdam';
     rule.dayOfWeek = 3; // 0-6 starting with sunday
-    rule.hour = 20;
-    rule.minute = 51;
+    rule.hour = 12;
+    rule.minute = 0;
     client.jobs.push(scheduleJob(rule, () => notifyWednesdays(client, logger)));
     logger.log('info', 'Setup wednesday notifier job');
   },
