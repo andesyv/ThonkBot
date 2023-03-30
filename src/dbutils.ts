@@ -48,6 +48,7 @@ export const initDB = () => {
         id TEXT,
         user TEXT,
         points INTEGER
+        eggs INTEGER
         );`
   ).run();
   db.prepare(
