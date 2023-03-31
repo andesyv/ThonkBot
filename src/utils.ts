@@ -101,3 +101,34 @@ export const fetchGuildMember = async (
   }
   return undefined;
 };
+
+export const formatLeaderboardsString = (
+  scores: { user: string; score: number }[],
+  scoreName: string
+): string => {
+  if (scores.length <= 0) return '';
+  scores.sort((a, b) => b.score - a.score);
+  const longestName = scores
+    .map(({ user }) => user)
+    .reduce((l, r) => (l.length < r.length ? r : l), '').length;
+
+  return scores
+    .map(({ user, score }, i) => {
+      return `${i + 1}. \t \`${user}\` ${' '.repeat(
+        longestName - user.length
+      )}\t (**${score}** ${scoreName})`;
+    })
+    .join('\n');
+};
+
+export const formatLeaderboards = (
+  scores: { user: string; score: number }[],
+  scoreName: string
+): EmbedBuilder => {
+  const content = formatLeaderboardsString(scores, scoreName);
+  return new EmbedBuilder({
+    title: 'Leaderboards',
+    description:
+      0 < content.length ? content : "There's nothing here. ¯\\_(ツ)_/¯"
+  });
+};

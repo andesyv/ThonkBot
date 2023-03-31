@@ -2,7 +2,7 @@
 
 A simple discord bot for thonking made using Node.js, Discord.js and TypeScript.
 
-[Add it to your server!](https://discord.com/api/oauth2/authorize?client_id=492017860068114444&permissions=201451520&scope=bot%20applications.commands)
+[Add it to your server!](https://discord.com/api/oauth2/authorize?client_id=492017860068114444&permissions=10939132992&scope=bot%20applications.commands)
 
 # Commands
 
