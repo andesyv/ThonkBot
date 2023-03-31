@@ -2,7 +2,7 @@ import SQLite, { SqliteError } from 'better-sqlite3';
 import * as dateFns from 'date-fns';
 import { EmbedBuilder, Guild, GuildChannel, GuildMember } from 'discord.js';
 import { Logger } from 'winston';
-import { logError } from './utils.js';
+import { formatLeaderboards, logError } from './utils.js';
 export const db = new SQLite('./db.sqlite');
 
 export interface DBBank {
@@ -147,7 +147,7 @@ export const updatePoints = ({ id, guild }: GuildMember, points: number) => {
 export const getLeaderboards = async (
   guild: Guild
 ): Promise<EmbedBuilder | undefined> => {
-  const guilds = (
+  const bankEntries = (
     await Promise.all(
       db
         .prepare(
@@ -164,25 +164,12 @@ export const getLeaderboards = async (
     )
   )
     .filter((v): v is DBBank => v !== undefined)
-    .slice(0, 10);
-  guilds.sort((a, b) => b.points - a.points);
-  if (0 < guilds.length) {
-    const longestName = guilds
-      .map(({ user }) => user)
-      .reduce((l, r) => (l.length < r.length ? r : l), '').length;
+    .slice(0, 10)
+    .map((entry) => ({ user: entry.user, score: entry.points }));
 
-    const desc = guilds
-      .map(({ user, points }, i) => {
-        return `${i + 1}. \t \`${user}\` ${' '.repeat(
-          longestName - user.length
-        )}\t (**${points}** sthonks)`;
-      })
-      .join('\n');
-    return new EmbedBuilder({
-      title: 'Leaderboards',
-      description: desc
-    });
-  }
+  return 0 < bankEntries.length
+    ? formatLeaderboards(bankEntries, 'sthonks')
+    : undefined;
 };
 
 export enum RecordType {
@@ -250,7 +237,8 @@ export const toggleIdRecord = (
   type: RecordType
 ): boolean => {
   // Only filtering on ids for users so user ids are shared between guilds
-  const filter = type === RecordType.Guild ? "id = @id AND gid = @gid" : "id = @id";
+  const filter =
+    type === RecordType.Guild ? 'id = @id AND gid = @gid' : 'id = @id';
   const q = db.prepare(`SELECT * FROM ${table} WHERE ${filter}`);
   const q_res: RecordDBEntry | undefined = q.get({ id: id, gid: gid });
   const exists = q_res !== undefined;
@@ -263,6 +251,16 @@ export const toggleIdRecord = (
 };
 
 export const toggleGuildRecord = (table: string, channel: GuildChannel) =>
-  wrapDBThrowable(toggleIdRecord)(table, channel.id, channel.guild.id, RecordType.Guild);
+  wrapDBThrowable(toggleIdRecord)(
+    table,
+    channel.id,
+    channel.guild.id,
+    RecordType.Guild
+  );
 export const toggleUserRecord = (table: string, user: GuildMember) =>
-  wrapDBThrowable(toggleIdRecord)(table, user.id, user.guild.id, RecordType.User);
+  wrapDBThrowable(toggleIdRecord)(
+    table,
+    user.id,
+    user.guild.id,
+    RecordType.User
+  );
