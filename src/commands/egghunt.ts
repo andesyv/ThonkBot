@@ -16,6 +16,11 @@ import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
 import { Logger } from 'winston';
 import { formatLeaderboardsString, logError, shuffle } from '../utils.js';
 import BotClient from '../client.js';
+import {
+  getUserPointsEntry,
+  updatePoints,
+  wrapDBThrowable
+} from '../dbutils.js';
 
 interface MessageIdentifier {
   messageId: string;
@@ -50,7 +55,7 @@ const findRandomMessage = async (
     (await guild.channels.fetch())
       .filter(
         (channel): channel is TextChannel =>
-          channel.isTextBased() && channel instanceof TextChannel
+          channel && channel.isTextBased() && channel instanceof TextChannel
       )
       .map((channel) => channel)
   );
@@ -68,6 +73,11 @@ const findRandomMessage = async (
     }
   }
   return undefined;
+};
+
+const incrementEggs = async (member: GuildMember) => {
+  const { points, eggs } = await getUserPointsEntry(member);
+  updatePoints(member, points, eggs + 1);
 };
 
 // ---- Embeds -------------
@@ -114,10 +124,9 @@ const formatScores = async (
         score
       })).map(async ({ id, score }) => ({
         user: await getNickname(await guild.members.fetch(id), guild),
-        score
+        score: [{ name: 'eggs', value: score }]
       }))
-    ),
-    'eggs'
+    )
   );
 
 const userFoundEggEmbed = async (
@@ -244,6 +253,10 @@ const eggFound = async (game: Game, user: User) => {
     game.collector = undefined;
     game.eggCount += 1;
     game.scores.set(user.id, (game.scores.get(user.id) ?? 0) + 1);
+
+    wrapDBThrowable(incrementEggs)(
+      await (await game.guild()).members.fetch(user.id)
+    );
 
     if (10 <= game.eggCount) {
       finishGame(game, user);
