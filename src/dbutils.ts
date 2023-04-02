@@ -181,7 +181,11 @@ export const getLeaderboards = async (
       const scores: ScorePointRepresentation[] = [
         { name: 'sthonks', value: entry.points }
       ];
-      if (0 < entry.eggs) scores.push({ name: 'eggs', value: entry.eggs });
+      if (0 < entry.eggs)
+        scores.push({
+          name: 1 < entry.eggs ? 'eggs' : 'egg',
+          value: entry.eggs
+        });
       return {
         user: entry.user,
         score: scores
