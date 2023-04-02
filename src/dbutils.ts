@@ -2,7 +2,11 @@ import SQLite, { SqliteError } from 'better-sqlite3';
 import * as dateFns from 'date-fns';
 import { EmbedBuilder, Guild, GuildChannel, GuildMember } from 'discord.js';
 import { Logger } from 'winston';
-import { formatLeaderboards, logError } from './utils.js';
+import {
+  ScorePointRepresentation,
+  formatLeaderboards,
+  logError
+} from './utils.js';
 export const db = new SQLite('./db.sqlite');
 
 export interface DBBank {
@@ -10,6 +14,7 @@ export interface DBBank {
   id: string;
   user: string;
   points: number;
+  eggs: number;
 }
 
 export interface DBMetabank {
@@ -47,8 +52,8 @@ export const initDB = () => {
         bid INTEGER PRIMARY KEY,
         id TEXT,
         user TEXT,
-        points INTEGER
-        eggs INTEGER
+        points INTEGER DEFAULT 0,
+        eggs INTEGER DEFAULT 0
         );`
   ).run();
   db.prepare(
@@ -102,7 +107,8 @@ export const getUserPointsEntry = (member: GuildMember): Promise<DBBank> => {
       obj = {
         id: member.id,
         user: member.user.tag,
-        points: 100
+        points: 100,
+        eggs: 0
       };
 
       const createUserTable = db.transaction((userObject: DBBank) => {
@@ -137,11 +143,17 @@ export const getUserPointsEntry = (member: GuildMember): Promise<DBBank> => {
   }
 };
 
-export const updatePoints = ({ id, guild }: GuildMember, points: number) => {
+export const updatePoints = (
+  { id, guild }: GuildMember,
+  points: number,
+  eggs?: number
+) => {
   const setScore = db.prepare(
-    'UPDATE bank SET points = @points WHERE bid = (SELECT bid FROM guilds WHERE uid = @uid AND gid = @gid);'
+    `UPDATE bank SET points = @points${
+      eggs !== undefined ? ', eggs = @eggs' : ''
+    } WHERE bid = (SELECT bid FROM guilds WHERE uid = @uid AND gid = @gid);`
   );
-  setScore.run({ uid: id, gid: guild.id, points: points });
+  setScore.run({ uid: id, gid: guild.id, points: points, eggs: eggs });
 };
 
 export const getLeaderboards = async (
@@ -165,11 +177,18 @@ export const getLeaderboards = async (
   )
     .filter((v): v is DBBank => v !== undefined)
     .slice(0, 10)
-    .map((entry) => ({ user: entry.user, score: entry.points }));
+    .map((entry): Parameters<typeof formatLeaderboards>[0][0] => {
+      const scores: ScorePointRepresentation[] = [
+        { name: 'sthonks', value: entry.points }
+      ];
+      if (0 < entry.eggs) scores.push({ name: 'eggs', value: entry.eggs });
+      return {
+        user: entry.user,
+        score: scores
+      };
+    });
 
-  return 0 < bankEntries.length
-    ? formatLeaderboards(bankEntries, 'sthonks')
-    : undefined;
+  return 0 < bankEntries.length ? formatLeaderboards(bankEntries) : undefined;
 };
 
 export enum RecordType {

@@ -102,30 +102,37 @@ export const fetchGuildMember = async (
   return undefined;
 };
 
+export interface ScorePointRepresentation {
+  name: string;
+  value: number;
+}
+
 export const formatLeaderboardsString = (
-  scores: { user: string; score: number }[],
-  scoreName: string
+  scores: { user: string; score: [...ScorePointRepresentation[]] }[]
 ): string => {
-  if (scores.length <= 0) return '';
-  scores.sort((a, b) => b.score - a.score);
+  if (scores.length <= 0 || scores.some((score) => score.score.length <= 0))
+    return '';
+  scores.sort((a, b) => b.score[0].value - a.score[0].value);
   const longestName = scores
     .map(({ user }) => user)
     .reduce((l, r) => (l.length < r.length ? r : l), '').length;
+
+  const formatScore = (score: [...ScorePointRepresentation[]]): string =>
+    score.map(({ name, value }) => `**${value}** ${name}`).join(', ');
 
   return scores
     .map(({ user, score }, i) => {
       return `${i + 1}. \t \`${user}\` ${' '.repeat(
         longestName - user.length
-      )}\t (**${score}** ${scoreName})`;
+      )}\t (${formatScore(score)})`;
     })
     .join('\n');
 };
 
 export const formatLeaderboards = (
-  scores: { user: string; score: number }[],
-  scoreName: string
+  scores: { user: string; score: [...ScorePointRepresentation[]] }[]
 ): EmbedBuilder => {
-  const content = formatLeaderboardsString(scores, scoreName);
+  const content = formatLeaderboardsString(scores);
   return new EmbedBuilder({
     title: 'Leaderboards',
     description:

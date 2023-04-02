@@ -73,7 +73,7 @@ const notifyWednesdays = async (client: Client, logger: Logger) => {
       } catch (e) {
         logError(e, logger);
       }
-      
+
       // Remove stale records
       logger.log(
         'info',
