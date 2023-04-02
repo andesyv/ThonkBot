@@ -7,6 +7,8 @@ import {
   GuildChannel,
   GuildMember,
   Message,
+  NonThreadGuildBasedChannel,
+  PermissionsBitField,
   ReactionCollector,
   Snowflake,
   TextChannel,
@@ -46,17 +48,35 @@ const getNickname = async (user: User | GuildMember, guild?: Guild) => {
 const nullToUndefined = <T>(t: T | null): T | undefined =>
   t === null ? undefined : t;
 
+const isTextChannel = (
+  channel?: NonThreadGuildBasedChannel
+): channel is TextChannel =>
+  channel !== undefined &&
+  channel.isTextBased() &&
+  channel instanceof TextChannel;
+
+const canUseChannel = (channel: TextChannel, bot: GuildMember) => {
+  const permissions = channel.permissionsFor(bot.id);
+  return (
+    permissions !== null &&
+    permissions.has([
+      PermissionsBitField.Flags.ReadMessageHistory,
+      PermissionsBitField.Flags.ManageMessages,
+      PermissionsBitField.Flags.AddReactions
+    ])
+  );
+};
+
 const findRandomMessage = async (
   guild: Guild,
   clientUser: ClientUser,
   eggCount: number
 ): Promise<Message<boolean> | undefined> => {
+  const member = await guild.members.fetch(clientUser.id);
   const channels = shuffle(
     (await guild.channels.fetch())
-      .filter(
-        (channel): channel is TextChannel =>
-          channel && channel.isTextBased() && channel instanceof TextChannel
-      )
+      .filter(isTextChannel)
+      .filter((channel) => canUseChannel(channel, member))
       .map((channel) => channel)
   );
 
