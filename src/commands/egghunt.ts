@@ -48,12 +48,13 @@ const getNickname = async (user: User | GuildMember, guild?: Guild) => {
 const nullToUndefined = <T>(t: T | null): T | undefined =>
   t === null ? undefined : t;
 
+const isNotNull = <T>(t: T | null | undefined): t is T =>
+  t !== undefined || t !== null;
+
 const isTextChannel = (
-  channel?: NonThreadGuildBasedChannel
+  channel: NonThreadGuildBasedChannel | undefined | null
 ): channel is TextChannel =>
-  channel !== undefined &&
-  channel.isTextBased() &&
-  channel instanceof TextChannel;
+  isNotNull(channel) && channel.isTextBased() && channel instanceof TextChannel;
 
 const canUseChannel = (channel: TextChannel, bot: GuildMember) => {
   const permissions = channel.permissionsFor(bot.id);
