@@ -10,7 +10,7 @@ env:
 
 jobs:
   lint:
-    name: lint
+    name: lint and transpile
     runs-on: ubuntu-latest
 
     steps:
@@ -37,17 +37,6 @@ jobs:
         run: yarn --prefer-offline
       - name: run lint
         run: yarn run lint
-
-  tsc:
-    name: tsc
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 17
-      - name: yarn install
-        run: yarn install
       - name: tsc
         uses: icrawl/action-tsc@v1
 
