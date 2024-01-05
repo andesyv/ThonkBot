@@ -30,22 +30,12 @@ a Node.JS application.
 2. Create a new application _(if you don't have one ready already)_
 3. Attach a bot to your application
 4. Clone the repository locally: `git clone https://github.com/andesyv/ThonkBot.git`
-5. Create a JSON file in the root directory of the repository called
-   **config.json**.
-6. Copy the bot token _(Click the reveal or copy button)_ and the bot client id _(OAuth2 -> General -> Client id)_ and paste it into the **config.json** file under a
-   **token** and **clientId** attribute. Like this:
-
-```json
-{
-  "token": "Your token here",
-  "clientId": "Your client id here"
-}
-```
-7. This bot reads nicknames and message content, and therefore requires the "server member intent" and "message content intent" to be checked.
-8. Head to the _OAuth2_ -> _URL Generator_ tab
-9.  Mark the _bot_ and _applications.commands_ scopes, and any additional permissions you think you'll need (or just Administrator for everything). You may get error messages if attempting to perform actions the bot does not have access to.
-10.  Use the generated link to add your bot to a server.
-11. Install all the requirements for the bot. Below are some Linux instructions, but Windows follows a similar approach:
+5. Copy the `template.env` to a file called `.env` in the root directory of the repository and fill it with you discord client ID, your bot token and a Giphy API key (optional).
+6. This bot reads nicknames and message content, and therefore requires the "server member intent" and "message content intent" to be checked.
+7. Head to the _OAuth2_ -> _URL Generator_ tab
+8. Mark the _bot_ and _applications.commands_ scopes, and any additional permissions you think you'll need (or just Administrator for everything). You may get error messages if attempting to perform actions the bot does not have access to.
+9. Use the generated link to add your bot to a server.
+10. Install all the requirements for the bot. Below are some Linux instructions, but Windows follows a similar approach:
 ```sh
 # Some Debian distros don't ship with the version of Node.JS used by the bot in their package managers, so to install Node.JS > 18 do this to fetch the package repos:
 curl -sL https://deb.nodesource.com/setup_18.x | sudo bash -
