@@ -5,7 +5,7 @@ node_modules/
 *.log
 
 # The config file
-config.json
+.env
 
 # Database files
 *.sqlite

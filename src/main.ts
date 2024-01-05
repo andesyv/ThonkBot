@@ -5,7 +5,7 @@ import {
   InteractionType
 } from 'discord.js';
 import winston from 'winston';
-import config from '../config.json' assert { type: 'json' };
+import 'dotenv/config';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { readdir, stat } from 'fs/promises';
@@ -117,8 +117,8 @@ const init = async () => {
   });
 
   // Interaction registration:
-  const rest = new REST({ version: '9' }).setToken(config.token);
-  await rest.put(Routes.applicationCommands(config.clientId), {
+  const rest = new REST({ version: '9' }).setToken(process.env.TOKEN ?? '');
+  await rest.put(Routes.applicationCommands(process.env.CLIENT_ID ?? ''), {
     body: [...client.interactionCommands.values()].map((c) => c.data.toJSON())
   });
   logger.log('info', 'Successfully registered application commands.');
@@ -171,7 +171,7 @@ const init = async () => {
   }
 
   // Finalize initiation by logging in
-  client.login(config.token);
+  client.login(process.env.TOKEN ?? '');
 };
 
 init();

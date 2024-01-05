@@ -11,7 +11,6 @@ import {
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
 import axios from 'axios';
-import config from '../../config.json' assert { type: 'json' };
 import { logError } from '../utils.js';
 
 interface SpookyApiResponse {
@@ -26,7 +25,9 @@ interface SpookyApiResponse {
 
 const getRandomSpookImageUrl = async (): Promise<string> => {
   const api = await axios.get<SpookyApiResponse>(
-    `https://api.giphy.com/v1/gifs/random?tag=skeleton&api_key=${config.giphy_key}`
+    `https://api.giphy.com/v1/gifs/random?tag=skeleton&api_key=${
+      process.env.GIPHY_KEY ?? ''
+    }`
   );
   return api.data.data.images.original.url;
 };
