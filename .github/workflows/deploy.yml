@@ -41,7 +41,7 @@ jobs:
         uses: icrawl/action-tsc@v1
 
   build-and-push-image:
-    needs: [lint, tsc]
+    needs: lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
