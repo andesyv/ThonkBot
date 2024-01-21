@@ -43,13 +43,15 @@ const getAll = (): UptimeRecord[] =>
     end: parseISO(entry.end)
   }));
 
+const updateLastRecordToCurrentTime = wrapDBThrowable(() => {
+  db.prepare(
+    "UPDATE uptimeRecords SET end=datetime('now') WHERE id = (SELECT id FROM uptimeRecords ORDER BY id DESC LIMIT 1);"
+  ).run();
+});
+
 const updateCurrentTime = (logger: Logger) => {
   try {
-    wrapDBThrowable(() => {
-      db.prepare(
-        "UPDATE uptimeRecords SET end=datetime('now') WHERE id = (SELECT id FROM uptimeRecords ORDER BY id DESC LIMIT 1);"
-      ).run();
-    });
+    updateLastRecordToCurrentTime();
   } catch (e) {
     logError(e, logger);
   }
@@ -72,7 +74,7 @@ const buildMessageContent = (): string => {
   );
   return `ThonkBot™ has been alive for a total of ${Math.floor(
     aliveTime
-  )} minutes or ${Math.round((100 * aliveTime) / totalTime) * 0.01} % since ${
+  )} minutes or ${Math.round((100 * aliveTime) / totalTime)} % since ${
     first !== undefined ? time(first.start, 'F') : '¯\\_(ツ)_/¯'
   }`;
 };
