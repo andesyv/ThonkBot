@@ -28,9 +28,11 @@ export interface DBGuild {
 }
 
 // https://stackoverflow.com/questions/45020874/typescript-wrapping-function-with-generic-type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const wrapDBThrowable = <T extends (...args: any[]) => any>(
   func: T
 ): T => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return <T>((...args: any[]) => {
     try {
       return func(...args);
