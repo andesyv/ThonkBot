@@ -5,7 +5,13 @@ import { Logger } from 'winston';
 import { db, wrapDBThrowable } from '../dbutils.js';
 import { logError } from '../utils.js';
 import { RecurrenceRule, scheduleJob } from 'node-schedule';
-import { parseISO, differenceInMinutes } from 'date-fns';
+import {
+  parseISO,
+  differenceInMilliseconds,
+  formatDuration,
+  Duration,
+  intervalToDuration
+} from 'date-fns';
 
 interface UptimeRecordDBEntry {
   start: string;
@@ -57,21 +63,30 @@ const updateCurrentTime = (logger: Logger) => {
   }
 };
 
+const millisecondsToDuration = (msDuration: number): Duration => {
+  const now = Date.now();
+  return intervalToDuration({ start: now, end: new Date(now + msDuration) });
+};
+
 const buildMessageContent = (): string => {
   const records = getAll();
   const first = records.at(0)?.start;
   const last = records.at(-1)?.end;
-  const totalTime =
+  const totalTimeMS =
     1 < records.length && first !== undefined && last !== undefined
-      ? differenceInMinutes(last, first)
+      ? differenceInMilliseconds(last, first)
       : 0;
-  const aliveTime = records.reduce(
-    (acc, curr) => acc + differenceInMinutes(curr.end, curr.start),
+  const aliveTimeMS = records.reduce(
+    (acc, curr) => acc + differenceInMilliseconds(curr.end, curr.start),
     0
   );
+  const humanReadableDuration = formatDuration(
+    millisecondsToDuration(aliveTimeMS)
+  );
+  const percentage = Math.round((10000 * aliveTimeMS) / totalTimeMS) * 0.01;
   return `ThonkBot™ has been alive for a total of ${Math.floor(
-    aliveTime
-  )} minutes or ${Math.round((10000 * aliveTime) / totalTime) * 0.01} % since ${
+    aliveTimeMS
+  )} milliseconds (${humanReadableDuration}) or ${percentage} % since ${
     first !== undefined ? time(first, 'F') : '¯\\_(ツ)_/¯'
   }`;
 };
