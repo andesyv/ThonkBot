@@ -112,17 +112,14 @@ const uptime: ICommandBase & ISlashCommand & IMessageCommand = {
     _client: Client,
     logger: Logger
   ): Promise<unknown> => {
+    await interaction.deferReply();
     try {
-      await interaction.deferReply({ ephemeral: false });
       // Update current time before sending message
       updateCurrentTime(logger);
       return interaction.editReply(buildMessageContent());
     } catch (e) {
       logError(e, logger);
-      return interaction.reply({
-        content: 'Command failed. :(',
-        ephemeral: true
-      });
+      return interaction.editReply('Command failed. :(');
     }
   },
   aliases: ['alive', 'notdead', 'survived'],

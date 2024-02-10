@@ -1,41 +1,81 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
+import {
+  AttachmentBuilder,
+  ChatInputCommandInteraction,
+  Client,
+  EmbedBuilder,
+  Message
+} from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import {
-  getCommandArgs,
-  logError,
-  randomImageToEmbed,
-  rootDir
-} from '../utils.js';
-import { readdir, stat } from 'fs/promises';
-import { join, basename } from 'path';
+import { getCommandArgs, logError } from '../utils.js';
+import { writeFile } from 'fs/promises';
+import { basename } from 'path';
+import axios from 'axios';
 
-const getAllLanguageFolders = async (): Promise<string[]> => {
-  const LANGUAGE_FOLDER_PATH = 'lib/anime-girls-holding-programming-books';
-  const rootPath = join(rootDir, LANGUAGE_FOLDER_PATH);
-  const folders = (await readdir(rootPath)).map(async (p) =>
-    (await stat(join(rootPath, p))).isDirectory()
-      ? join(LANGUAGE_FOLDER_PATH, p)
-      : undefined
-  );
-  return (await Promise.all(folders)).filter(
-    (p): p is string => p !== undefined
-  );
-};
+// https://github.com/cat-milk/Anime-Girls-Holding-Programming-Books/issues/632
+// https://github.com/THEGOLDENPRO/aghpb_api
+const apiPath = 'https://api.devgoldy.xyz/aghpb/v1';
 
-const findLanguageFolder = async (
-  language: string
+const getSanitizedLanguage = async (
+  language: string | undefined,
+  logger: Logger
 ): Promise<string | undefined> => {
-  const folders = await getAllLanguageFolders();
-  for (const subpath of folders)
-    if (basename(subpath).toLowerCase() === language) return subpath;
-  return undefined;
+  if (language === undefined) {
+    return undefined;
+  }
+
+  try {
+    const response = await axios.get<string[]>(`${apiPath}/categories`, {
+      headers: { Accept: 'application/json' }
+    });
+
+    if (response.status !== 200) {
+      return undefined;
+    }
+
+    for (const validLanguage of response.data) {
+      if (validLanguage.toLowerCase().includes(language)) {
+        return validLanguage;
+      }
+    }
+
+    return undefined;
+  } catch (e) {
+    logError(e, logger);
+    return undefined;
+  }
 };
 
-const findRandomLanguageFolder = async (): Promise<string> => {
-  const folders = await getAllLanguageFolders();
-  return folders[Math.floor(Math.random() * folders.length)];
+const dataIsArrayBuffer = (
+  data: ArrayBuffer | unknown,
+  statusCode: number
+): data is ArrayBuffer => statusCode == 200;
+
+export const createImageEmbed = async (language?: string) => {
+  const response = await axios.get<ArrayBuffer | unknown>(`${apiPath}/random`, {
+    params: language !== undefined ? { category: language } : undefined,
+    responseType: 'arraybuffer'
+  });
+  if (!dataIsArrayBuffer(response.data, response.status))
+    throw new Error(
+      `Failed to fetch image with: ${JSON.stringify(response.data)}`
+    );
+
+  const isPNG = response.headers['Content-Type'] === 'image/png';
+  const tempFilePath = `temp.${isPNG ? 'png' : 'jpeg'}`;
+  await writeFile(tempFilePath, Buffer.from(response.data));
+
+  const attachment = new AttachmentBuilder(tempFilePath);
+  const embed = new EmbedBuilder({
+    title:
+      language !== undefined ? `Programming! (${language})` : 'Programming!',
+    image: { url: `attachment://${basename(tempFilePath)}` }
+  });
+  return {
+    embeds: [embed],
+    files: [attachment]
+  };
 };
 
 const animeprogramming: ICommandBase & ISlashCommand & IMessageCommand = {
@@ -52,49 +92,41 @@ const animeprogramming: ICommandBase & ISlashCommand & IMessageCommand = {
     ),
   handleInteraction: async (
     interaction: ChatInputCommandInteraction,
-    client: Client,
+    _client: Client,
     logger: Logger
   ): Promise<unknown> => {
-    try {
-      const language = interaction.options.getString('language')?.toLowerCase();
-      const folder = await (language
-        ? findLanguageFolder(language)
-        : findRandomLanguageFolder());
-      if (folder === undefined) {
-        return interaction.reply({
-          content: "Anime girls don't program that language.",
-          ephemeral: true
-        });
-      }
-
-      return interaction.reply(
-        await randomImageToEmbed(folder, 'Programming!')
-      );
-    } catch (e) {
-      logError(e, logger);
+    const language = interaction.options.getString('language')?.toLowerCase();
+    const sanitizedLanguage = await getSanitizedLanguage(language, logger);
+    if (language !== undefined && sanitizedLanguage === undefined) {
       return interaction.reply({
-        content: 'Command failed. :(',
+        content: "Anime girls don't program that language.",
         ephemeral: true
       });
+    }
+
+    await interaction.deferReply();
+    try {
+      return interaction.editReply(await createImageEmbed(sanitizedLanguage));
+    } catch (e) {
+      logError(e, logger);
+      return interaction.editReply('Command failed. :(');
     }
   },
   aliases: ['programming', 'programminganime', 'animecoding', 'coding'],
   handleMessage: async (
     message: Message,
-    client: Client,
+    _client: Client,
     logger: Logger
   ): Promise<unknown> => {
     try {
       const args = getCommandArgs(message);
       const language = 0 < args.length ? args[0] : undefined;
-      const folder = await (language
-        ? findLanguageFolder(language)
-        : findRandomLanguageFolder());
-      if (folder === undefined) {
+      const sanitizedLanguage = await getSanitizedLanguage(language, logger);
+      if (language !== undefined && sanitizedLanguage === undefined) {
         return message.reply("Anime girls don't program that language.");
       }
 
-      return message.reply(await randomImageToEmbed(folder, 'Programming!'));
+      return message.reply(await createImageEmbed(sanitizedLanguage));
     } catch (e) {
       logError(e, logger);
       return message.reply('Command failed. :(');

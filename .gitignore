@@ -4,6 +4,7 @@ node_modules/
 # Generated files
 *.log
 gitVersionHash.txt
+temp.*
 
 # The config file
 .env
