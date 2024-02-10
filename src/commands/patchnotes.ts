@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { getCommandArgs, logError } from '../utils.js';
+import { errorToStr, getCommandArgs, logError } from '../utils.js';
 import { request } from '@octokit/request';
 import path from 'path';
 import BotClient from '../client.js';
@@ -17,9 +17,7 @@ const getCurrentCommitHash = async (
       await readFile(path.join(baseDir, 'gitVersionHash.txt'))
     ).toString();
   } catch (e) {
-    if (typeof e === 'string') {
-      logger.log('warn', `Failed to fetch current commit hash: ${e}`);
-    }
+    logger.log('warn', `Failed to fetch current commit hash: ${errorToStr(e)}`);
     return null;
   }
 };
@@ -84,7 +82,7 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
 
       await interaction.deferReply();
 
-      return interaction.reply({
+      return interaction.editReply({
         content: `Displaying last ${count} commits:`,
         embeds: embeds
       });

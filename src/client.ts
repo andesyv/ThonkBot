@@ -26,7 +26,8 @@ export default class BotClient extends Client {
   public messageEvents: ((msg: Message) => void)[] = [];
   public readonly baseDir = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
-    '..'
+    '..',
+    '..' // When compiled to JavaScript, output gets put into an additional "dist" folder.
   );
 
   public constructor(options: ClientOptions, commands: CommandType[]) {

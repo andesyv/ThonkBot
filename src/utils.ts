@@ -77,8 +77,15 @@ export function splitToChunks<T>(components: T[], chunksize: number): T[][] {
 }
 
 // Small helper to format errors to winston loggers
-export const logError = (e: any, logger: Logger) =>
-  logger.log('error', e instanceof Error ? e.message : JSON.stringify(e));
+export const errorToStr = (e: unknown): string =>
+  e instanceof Error
+    ? e.message
+    : typeof e === 'string'
+    ? e
+    : JSON.stringify(e);
+
+export const logError = (e: unknown, logger: Logger) =>
+  logger.log('error', errorToStr(e));
 
 /**
  * Attempts to look through all the guilds of the bot in search for a common guild with the user
