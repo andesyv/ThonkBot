@@ -21,11 +21,11 @@ import {
   wrapDBThrowable
 } from '../dbutils.js';
 import * as path from 'path';
-import { fetchGuildMember, logError } from '../utils.js';
+import { fetchGuildMember, logError, rootDir } from '../utils.js';
 import { RecurrenceRule, scheduleJob } from 'node-schedule';
 
 const buildMessageContent = (): MessageOptions => {
-  const file = path.join(process.cwd(), 'data', 'wednesday.jpg');
+  const file = path.join(rootDir, 'data', 'wednesday.jpg');
   const attachment = new AttachmentBuilder(file);
   const embed = new EmbedBuilder({
     image: { url: `attachment://${path.basename(file)}` }

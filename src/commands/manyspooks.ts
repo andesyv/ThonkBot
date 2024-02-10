@@ -7,12 +7,12 @@ import {
 } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { logError, SharedMessageOptions, shuffle } from '../utils.js';
+import { logError, rootDir, SharedMessageOptions, shuffle } from '../utils.js';
 import * as path from 'path';
 import { readdir, stat } from 'fs/promises';
 
 const fetchManySpooks = async (): Promise<SharedMessageOptions> => {
-  const dirpath = path.join(process.cwd(), 'data', 'Spooks');
+  const dirpath = path.join(rootDir, 'data', 'Spooks');
   const files = shuffle(await readdir(dirpath));
   const discordFileSizeLimit = 8 * 1024 * 1024;
 
