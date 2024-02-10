@@ -2,13 +2,18 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { getCommandArgs, logError, randomImageToEmbed } from '../utils.js';
+import {
+  getCommandArgs,
+  logError,
+  randomImageToEmbed,
+  rootDir
+} from '../utils.js';
 import { readdir, stat } from 'fs/promises';
 import { join, basename } from 'path';
 
 const getAllLanguageFolders = async (): Promise<string[]> => {
   const LANGUAGE_FOLDER_PATH = 'lib/anime-girls-holding-programming-books';
-  const rootPath = join(process.cwd(), LANGUAGE_FOLDER_PATH);
+  const rootPath = join(rootDir, LANGUAGE_FOLDER_PATH);
   const folders = (await readdir(rootPath)).map(async (p) =>
     (await stat(join(rootPath, p))).isDirectory()
       ? join(LANGUAGE_FOLDER_PATH, p)

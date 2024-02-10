@@ -2,19 +2,16 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
-import { errorToStr, getCommandArgs, logError } from '../utils.js';
+import { errorToStr, getCommandArgs, logError, rootDir } from '../utils.js';
 import { request } from '@octokit/request';
 import path from 'path';
 import BotClient from '../client.js';
 import { readFile } from 'fs/promises';
 
-const getCurrentCommitHash = async (
-  baseDir: string,
-  logger: Logger
-): Promise<string | null> => {
+const getCurrentCommitHash = async (logger: Logger): Promise<string | null> => {
   try {
     return (
-      await readFile(path.join(baseDir, 'gitVersionHash.txt'))
+      await readFile(path.join(rootDir, 'gitVersionHash.txt'))
     ).toString();
   } catch (e) {
     logger.log('warn', `Failed to fetch current commit hash: ${errorToStr(e)}`);
@@ -24,7 +21,6 @@ const getCurrentCommitHash = async (
 
 const getLastCommits = async (
   count: number,
-  baseDir: string,
   logger: Logger
 ): Promise<EmbedBuilder[]> => {
   const dunno = '¯\\_(ツ)_/¯';
@@ -36,9 +32,7 @@ const getLastCommits = async (
 
   if (status !== 200) throw new Error("Couldn't fetch commits");
 
-  const currentCommitHash = (
-    await getCurrentCommitHash(baseDir, logger)
-  )?.trimEnd();
+  const currentCommitHash = (await getCurrentCommitHash(logger))?.trimEnd();
 
   return data.map(({ sha, commit, html_url, author }) => {
     const [title, ...body] = commit.message.split('\n');
@@ -73,12 +67,12 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
     ),
   handleInteraction: async (
     interaction: ChatInputCommandInteraction,
-    client: BotClient,
+    _client: BotClient,
     logger: Logger
   ): Promise<unknown> => {
     try {
       const count = Math.floor(interaction.options.getNumber('count') ?? 1);
-      const embeds = await getLastCommits(count, client.baseDir, logger);
+      const embeds = await getLastCommits(count, logger);
 
       await interaction.deferReply();
 
@@ -97,13 +91,13 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
   aliases: ['patchnotes', 'notes', 'new'],
   handleMessage: async (
     message: Message,
-    client: BotClient,
+    _client: BotClient,
     logger: Logger
   ): Promise<unknown> => {
     try {
       const args = getCommandArgs(message);
       const count = 0 < args.length ? parseInt(args[0]) : 1;
-      const embeds = await getLastCommits(count, client.baseDir, logger);
+      const embeds = await getLastCommits(count, logger);
 
       return message.channel.send({
         content: `Last ${count} commits:`,

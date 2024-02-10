@@ -7,8 +7,6 @@ import {
   isSlashCommand
 } from './command.js';
 import { Job } from 'node-schedule';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 type CommandType =
   | ICommandBase
@@ -24,11 +22,6 @@ export default class BotClient extends Client {
   public readonly messageCommands: Map<string, ICommandBase & IMessageCommand>;
   public jobs: Job[] = [];
   public messageEvents: ((msg: Message) => void)[] = [];
-  public readonly baseDir = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    '..',
-    '..' // When compiled to JavaScript, output gets put into an additional "dist" folder.
-  );
 
   public constructor(options: ClientOptions, commands: CommandType[]) {
     super(options);

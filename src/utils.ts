@@ -8,12 +8,19 @@ import {
 } from 'discord.js';
 import { readdir } from 'fs/promises';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { Logger } from 'winston';
+
+export const rootDir = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..' // When compiled to JavaScript, output gets put into an additional "dist" folder.
+);
 
 export const getRandomAssetFileFromFolder = async (
   folder: string
 ): Promise<string> => {
-  const rootPath = path.join(process.cwd(), folder);
+  const rootPath = path.join(rootDir, folder);
   const files = await readdir(rootPath);
 
   if (Array.isArray(files) && 0 < files.length)
