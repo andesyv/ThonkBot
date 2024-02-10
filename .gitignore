@@ -1,8 +1,9 @@
 # Node files
 node_modules/
 
-# Log files
+# Generated files
 *.log
+gitVersionHash.txt
 
 # The config file
 .env

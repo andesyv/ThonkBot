@@ -5,7 +5,7 @@ import { Logger } from 'winston';
 import { db, wrapDBThrowable } from '../dbutils.js';
 import { logError } from '../utils.js';
 import { RecurrenceRule, scheduleJob } from 'node-schedule';
-import { parseISO, intervalToDuration, differenceInMinutes } from 'date-fns';
+import { parseISO, differenceInMinutes } from 'date-fns';
 
 interface UptimeRecordDBEntry {
   start: string;

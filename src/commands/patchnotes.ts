@@ -1,16 +1,34 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import {
-  ChatInputCommandInteraction,
-  Client,
-  EmbedBuilder,
-  Message
-} from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
 import { Logger } from 'winston';
 import { getCommandArgs, logError } from '../utils.js';
 import { request } from '@octokit/request';
+import path from 'path';
+import BotClient from '../client.js';
+import { readFile } from 'fs/promises';
 
-const getLastCommits = async (count: number): Promise<EmbedBuilder[]> => {
+const getCurrentCommitHash = async (
+  baseDir: string,
+  logger: Logger
+): Promise<string | null> => {
+  try {
+    return (
+      await readFile(path.join(baseDir, 'gitVersionHash.txt'))
+    ).toString();
+  } catch (e) {
+    if (typeof e === 'string') {
+      logger.log('warn', `Failed to fetch current commit hash: ${e}`);
+    }
+    return null;
+  }
+};
+
+const getLastCommits = async (
+  count: number,
+  baseDir: string,
+  logger: Logger
+): Promise<EmbedBuilder[]> => {
   const dunno = '¯\\_(ツ)_/¯';
   const { status, data } = await request('GET /repos/{owner}/{repo}/commits', {
     owner: 'andesyv',
@@ -18,24 +36,29 @@ const getLastCommits = async (count: number): Promise<EmbedBuilder[]> => {
     per_page: count
   });
 
-  if (status === 200) {
-    return data.map(({ commit, html_url, author }) => {
-      const [title, ...body] = commit.message.split('\n');
-      const date = commit.author?.date;
-      const embed = new EmbedBuilder({
-        title: title,
-        url: html_url,
-        footer: {
-          text: commit.author?.name ?? dunno,
-          iconURL: author?.avatar_url
-        },
-        timestamp: date !== undefined ? Date.parse(date) : undefined,
-        description: 0 < body.length ? body.join('\n') : undefined
-      });
-      return embed;
+  if (status !== 200) throw new Error("Couldn't fetch commits");
+
+  const currentCommitHash = (
+    await getCurrentCommitHash(baseDir, logger)
+  )?.trimEnd();
+
+  return data.map(({ sha, commit, html_url, author }) => {
+    const [title, ...body] = commit.message.split('\n');
+    const isCurrent =
+      currentCommitHash !== undefined && sha.startsWith(currentCommitHash);
+    const date = commit.author?.date;
+    const embed = new EmbedBuilder({
+      title: isCurrent ? `${title} 🚀` : title,
+      url: html_url,
+      footer: {
+        text: commit.author?.name ?? dunno,
+        iconURL: author?.avatar_url
+      },
+      timestamp: date !== undefined ? Date.parse(date) : undefined,
+      description: 0 < body.length ? body.join('\n') : undefined
     });
-  }
-  throw new Error("Could'nt fetch commits");
+    return embed;
+  });
 };
 
 const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
@@ -52,12 +75,14 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
     ),
   handleInteraction: async (
     interaction: ChatInputCommandInteraction,
-    client: Client,
+    client: BotClient,
     logger: Logger
   ): Promise<unknown> => {
     try {
       const count = Math.floor(interaction.options.getNumber('count') ?? 1);
-      const embeds = await getLastCommits(count);
+      const embeds = await getLastCommits(count, client.baseDir, logger);
+
+      await interaction.deferReply();
 
       return interaction.reply({
         content: `Displaying last ${count} commits:`,
@@ -74,13 +99,13 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
   aliases: ['patchnotes', 'notes', 'new'],
   handleMessage: async (
     message: Message,
-    client: Client,
+    client: BotClient,
     logger: Logger
   ): Promise<unknown> => {
     try {
       const args = getCommandArgs(message);
       const count = 0 < args.length ? parseInt(args[0]) : 1;
-      const embeds = await getLastCommits(count);
+      const embeds = await getLastCommits(count, client.baseDir, logger);
 
       return message.channel.send({
         content: `Last ${count} commits:`,
