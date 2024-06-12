@@ -7,7 +7,7 @@
   "repository": "andesyv/ThonkBot",
   "author": "andesyv",
   "engines": {
-    "node": ">=17.1",
+    "node": ">=18.0",
     "npm": "*"
   },
   "scripts": {
