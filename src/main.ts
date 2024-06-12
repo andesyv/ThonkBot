@@ -10,7 +10,12 @@ import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { readdir, stat } from 'fs/promises';
 import * as path from 'path';
-import { ICommandBase, IMessageCommand, ISlashCommand } from './command.js';
+import {
+  ICommandBase,
+  IMessageCommand,
+  ISlashCommand,
+  isCommand
+} from './command.js';
 import { initDB } from './dbutils.js';
 import BotClient from './client.js';
 import { logError } from './utils.js';
@@ -29,9 +34,7 @@ const isApplicationInteraction = (
 const fetchCommandPaths = async (root: string): Promise<string[]> => {
   return (
     await Promise.all(
-      (
-        await readdir(root)
-      ).map(async (name) => {
+      (await readdir(root)).map(async (name) => {
         const filePath = path.join(root, name);
         return (await stat(filePath)).isDirectory()
           ? await fetchCommandPaths(filePath)
@@ -48,8 +51,16 @@ const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
   );
   return Promise.all(
     commandPaths.map(async (filePath): Promise<CommandType> => {
-      logger.log('info', `Loading command ${path.basename(filePath)}`);
-      return (await import(pathToFileURL(filePath).href)).default;
+      const module = await import(pathToFileURL(filePath).href);
+      const commandIsh = module?.default ?? undefined;
+      if (commandIsh === undefined || commandIsh === null)
+        throw Error(`Failed to import command ${filePath}`);
+
+      if (!isCommand(commandIsh))
+        throw Error(`${filePath} is not a valid command`);
+
+      logger.log('info', `${path.basename(filePath)} loaded`);
+      return commandIsh;
     })
   );
 };
@@ -90,6 +101,7 @@ const logger = winston.createLogger({
 });
 
 const init = async () => {
+  logger.log('info', 'Loading commands...');
   const commands = await loadCommands(logger);
 
   // Client construction
