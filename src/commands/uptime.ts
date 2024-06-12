@@ -40,7 +40,7 @@ const initTable = (logger: Logger) => {
 };
 
 const getAllDBEntries = wrapDBThrowable((): UptimeRecordDBEntry[] =>
-  db.prepare('SELECT * FROM uptimeRecords').all()
+  db.prepare<unknown[], UptimeRecordDBEntry>('SELECT * FROM uptimeRecords').all()
 );
 
 const getAll = (): UptimeRecord[] =>

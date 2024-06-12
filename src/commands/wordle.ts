@@ -74,7 +74,7 @@ const resetTimeout = (id: string) => {
 
 const initateNewGame = (game_id: string, length = 5): Game => {
   const random_word = db
-    .prepare(
+    .prepare<{ length: number; }, DictEntry>(
       'SELECT * FROM words WHERE length = @length ORDER BY RANDOM() LIMIT 1'
     )
     .get({ length: length });

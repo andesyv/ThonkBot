@@ -3,17 +3,15 @@
  */
 
 import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandsOnlyBuilder
-} from '@discordjs/builders';
-import { ChatInputCommandInteraction, Message } from 'discord.js';
+  ChatInputCommandInteraction,
+  Message,
+  SharedSlashCommand
+} from 'discord.js';
 import { Logger } from 'winston';
 import BotClient from './client.js';
 
 export interface ICommandBase {
-  data:
-    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
-    | SlashCommandSubcommandsOnlyBuilder;
+  data: SharedSlashCommand;
   init?: (client: BotClient, logger: Logger) => Promise<void>;
 }
 

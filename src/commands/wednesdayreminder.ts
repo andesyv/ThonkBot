@@ -3,10 +3,10 @@ import {
   Client,
   Message,
   TextChannel,
-  MessageOptions,
   AttachmentBuilder,
   EmbedBuilder,
-  ChatInputCommandInteraction
+  ChatInputCommandInteraction,
+  MessageCreateOptions
 } from 'discord.js';
 import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
 import { Logger } from 'winston';
@@ -24,7 +24,7 @@ import * as path from 'path';
 import { fetchGuildMember, logError, rootDir } from '../utils.js';
 import { RecurrenceRule, scheduleJob } from 'node-schedule';
 
-const buildMessageContent = (): MessageOptions => {
+const buildMessageContent = (): MessageCreateOptions => {
   const file = path.join(rootDir, 'data', 'wednesday.jpg');
   const attachment = new AttachmentBuilder(file);
   const embed = new EmbedBuilder({
@@ -37,7 +37,7 @@ const buildMessageContent = (): MessageOptions => {
 };
 
 const getAll = wrapDBThrowable((): RecordDBEntry[] =>
-  db.prepare('SELECT * FROM wednesdays').all()
+  db.prepare<unknown[], RecordDBEntry>('SELECT * FROM wednesdays').all()
 );
 
 const notifyWednesdays = async (client: Client, logger: Logger) => {
