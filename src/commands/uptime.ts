@@ -3,15 +3,9 @@ import { Client, Message, ChatInputCommandInteraction } from 'discord.js';
 import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
 import { Logger } from 'winston';
 import { db, wrapDBThrowable } from '../dbutils.js';
-import { logError } from '../utils.js';
+import { logError, millisecondsToDuration } from '../utils.js';
 import { RecurrenceRule, scheduleJob } from 'node-schedule';
-import {
-  parseISO,
-  differenceInMilliseconds,
-  formatDuration,
-  Duration,
-  intervalToDuration
-} from 'date-fns';
+import { parseISO, differenceInMilliseconds, formatDuration } from 'date-fns';
 
 interface UptimeRecordDBEntry {
   start: string;
@@ -40,7 +34,9 @@ const initTable = (logger: Logger) => {
 };
 
 const getAllDBEntries = wrapDBThrowable((): UptimeRecordDBEntry[] =>
-  db.prepare<unknown[], UptimeRecordDBEntry>('SELECT * FROM uptimeRecords').all()
+  db
+    .prepare<unknown[], UptimeRecordDBEntry>('SELECT * FROM uptimeRecords')
+    .all()
 );
 
 const getAll = (): UptimeRecord[] =>
@@ -61,11 +57,6 @@ const updateCurrentTime = (logger: Logger) => {
   } catch (e) {
     logError(e, logger);
   }
-};
-
-const millisecondsToDuration = (msDuration: number): Duration => {
-  const now = Date.now();
-  return intervalToDuration({ start: now, end: new Date(now + msDuration) });
 };
 
 const buildMessageContent = (): string => {

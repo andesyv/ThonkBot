@@ -1,3 +1,4 @@
+import { Duration, intervalToDuration } from 'date-fns';
 import {
   AttachmentBuilder,
   Client,
@@ -152,4 +153,9 @@ export const formatLeaderboards = (
     description:
       0 < content.length ? content : "There's nothing here. ¯\\_(ツ)_/¯"
   });
+};
+
+export const millisecondsToDuration = (msDuration: number): Duration => {
+  const now = Date.now();
+  return intervalToDuration({ start: now, end: new Date(now + msDuration) });
 };
