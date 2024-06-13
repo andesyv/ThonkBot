@@ -39,9 +39,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
       - name: Determine version
         id: version-check
         uses: EndBug/version-check@v2
+        with:
+          diff-search: true
       - name: Fail if version wasn't updated
         if: steps.check.outputs.changed == 'false'
         run: exit 1
