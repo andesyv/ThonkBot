@@ -41,9 +41,6 @@ jobs:
       - name: Determine version
         id: version-check
         uses: EndBug/version-check@v2
-      # https://timheuer.com/blog/manually-force-a-failure-in-github-action-step/
       - name: Fail if version wasn't updated
-        if: steps.check.outputs.changed == 'true'
-        with:
-          script:
-            core.setFailed('Version number should be increment between new developments')
+        if: steps.check.outputs.changed == 'false'
+        run: exit 1
