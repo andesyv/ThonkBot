@@ -26,7 +26,7 @@ export const formatReply = (
 
 const parseNumber = (s: string): number | undefined => {
   const n = Number.parseInt(s);
-  return Number.isNaN(s) ? undefined : n;
+  return Number.isNaN(s) || n <= 0 ? undefined : n;
 };
 
 const bet: ICommandBase & ISlashCommand & IMessageCommand = {
