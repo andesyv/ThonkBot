@@ -10,13 +10,13 @@ import { Logger } from 'winston';
 import { getUserPointsEntry, updatePoints } from '../../dbutils.js';
 import { getCommandArgs, getNickname, logError } from '../../utils.js';
 
-const gamble = (points: number, amount: number): [number, number] => {
+export const gamble = (points: number, amount: number): [number, number] => {
   const r = Math.round(Math.random() * 100);
   const factor = (r / 100) * 2 - 1; // Convert from [0, 100] to [-1, 1]
   return [Math.max(points + Math.round(Math.pow(amount, 2) * factor), 0), r];
 };
 
-const formatReply = (
+export const formatReply = (
   name: string,
   amount: number,
   roll: number,
