@@ -36,6 +36,7 @@ jobs:
 
   version-check:
     name: Version check
+    runs-on: ubuntu-latest
 
     steps:
       - name: Determine version
