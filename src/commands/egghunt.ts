@@ -16,13 +16,19 @@ import {
 } from 'discord.js';
 import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
 import { Logger } from 'winston';
-import { formatLeaderboardsString, logError, shuffle } from '../utils.js';
+import {
+  formatLeaderboardsString,
+  logError,
+  millisecondsToDuration,
+  shuffle
+} from '../utils.js';
 import BotClient from '../client.js';
 import {
   getUserPointsEntry,
   updatePoints,
   wrapDBThrowable
 } from '../dbutils.js';
+import { formatDuration } from 'date-fns';
 
 interface MessageIdentifier {
   messageId: string;
@@ -73,6 +79,7 @@ const findRandomMessage = async (
   clientUser: ClientUser,
   eggCount: number
 ): Promise<Message<boolean> | undefined> => {
+  const messageBound = upperMessageBound(eggCount);
   const member = await guild.members.fetch(clientUser.id);
   const channels = shuffle(
     (await guild.channels.fetch())
@@ -83,14 +90,17 @@ const findRandomMessage = async (
 
   for (const channel of channels) {
     const messages = shuffle(
-      (
-        await channel.messages.fetch({ limit: upperMessageBound(eggCount) })
-      ).map((message) => message)
+      (await channel.messages.fetch({ limit: messageBound })).map(
+        (message) => message
+      )
     );
 
     // Find a random message that hasn't already been part of the easter egg hunt
     for (const message of messages) {
-      if (message.reactions.cache.size <= 0) return message;
+      const reactions = await message.reactions.resolve('🥚')?.fetch();
+      if (reactions?.count ?? 0 > 0) continue;
+
+      return message;
     }
   }
   return undefined;
@@ -126,9 +136,9 @@ const gameStartEmbed = (
     .setFields([
       {
         name: 'Rules',
-        value: `*ThonkBot™* has placed a hidden egg in the form of an :egg: emoji among a random message. Click the emoji to claim the egg! After an egg has been claimed, another one will be planted after 5-60 minutes until 10 eggs have been discovered or nobody has discovered an egg for a while.
+        value: `*ThonkBot™* has placed a hidden egg in the form of an :egg: emoji among a random message. Click the emoji to claim the egg! After an egg has been claimed, another one will be planted after 5-120 seconds until 10 eggs have been discovered or nobody has discovered an egg within an hour.
 
-  Eggs can be placed among the first 100 mesages of any text channel. Only *one* person can claim an egg.
+  Eggs can be placed among the last 100 mesages of any text channel. Initial eggs are guaranteed to be placed closer to the last message, but may progressively be placed further away as more eggs are found. Only *one* person can claim an egg. (Egg emojis are cleaned up at the end of the game)
   
   Happy hunting!`
       }
@@ -194,6 +204,8 @@ class Game {
   collector?: ReactionCollector;
   scores: Map<string, number>;
   endTimeout?: NodeJS.Timeout;
+  readonly timeoutSeconds = 1 * 60 * 60 * 1000; // 1 hour
+  endTimeoutStartDate: number = 0;
   cleanupMessages: MessageIdentifier[];
 
   constructor(client: BotClient, logger: Logger, channel: GuildChannel) {
@@ -204,15 +216,14 @@ class Game {
     this.eggCount = 0;
     this.scores = new Map();
     this.cleanupMessages = [];
-
-    this.initRound(channel.guild);
   }
 
   async initRound(guild: Guild) {
     try {
       this.collector = await placeEgg(this.client, guild, this.eggCount);
+      this.logger.log('info', 'Placed a hidden egg');
       this.collector.on('collect', (_reaction, user) => {
-        eggFound(this, user);
+        this.eggFound(user);
       });
       this.cleanupMessages.push({
         messageId: this.collector.message.id,
@@ -222,6 +233,63 @@ class Game {
       this.resetEndTimer();
     } catch (e) {
       logError(e, this.logger);
+    }
+  }
+
+  async eggFound(user: User) {
+    try {
+      this.collector = undefined;
+      this.eggCount += 1;
+      this.scores.set(user.id, (this.scores.get(user.id) ?? 0) + 1);
+
+      wrapDBThrowable(incrementEggs)(
+        await (await this.guild()).members.fetch(user.id)
+      );
+
+      if (10 <= this.eggCount) {
+        this.finishGame(user);
+      } else {
+        const channel = await this.controlChannel();
+        channel?.send({ embeds: [await userFoundEggEmbed(user, this)] });
+
+        // Between 5 and 120 seconds
+        const cooldown = randomRange(5, 120) * 1000;
+
+        this.nextRoundTimeout = setTimeout(async () => {
+          try {
+            const guild = await this.guild();
+            this.initRound(guild);
+          } catch (e) {
+            logError(e, this.logger);
+          }
+        }, cooldown);
+      }
+    } catch (e) {
+      logError(e, this.logger);
+    }
+  }
+
+  async finishGame(user?: User) {
+    // Node.js manages to magically call the endTimeout even after the game has gone out of scope.
+    // Oh boy how I love garbage collected languages...
+    clearTimeout(this.endTimeout);
+
+    const channel = await this.controlChannel();
+    await channel?.send({ embeds: [await gameFinishedEmbed(this, user)] });
+
+    // Cleanup
+    const guild = await this.guild();
+    const cleanupMessages = new Array(...this.cleanupMessages);
+    games.delete(this.guildId);
+
+    // Remove reactions at the end as it has a high probability of failing
+    // (if the server have not given the bot sufficient rights)
+    for (const { messageId, channelId } of cleanupMessages) {
+      const channel = await guild.channels.fetch(channelId);
+      if (channel instanceof TextChannel) {
+        const message = await channel.messages.fetch(messageId);
+        await message.reactions.resolve('🥚')?.remove();
+      }
     }
   }
 
@@ -237,18 +305,35 @@ class Game {
   }
 
   resetEndTimer() {
-    clearTimeout(this.endTimeout);
+    this.endTimeoutStartDate = Date.now();
+    if (this.endTimeout !== undefined) {
+      this.endTimeout.refresh();
+      return;
+    }
 
     this.endTimeout = setTimeout(async () => {
       try {
-        finishGame(this);
+        this.finishGame();
         this.logger.log('info', 'Egg hunt completed successfully!');
       } catch (e) {
         logError(e, this.logger);
       }
-    }, 4 * 60 * 60 * 1000);
+    }, this.timeoutSeconds);
   }
 }
+
+const getFormattedTimeLeft = (game?: Game): string => {
+  if (game === undefined) return '¯\\_(ツ)_/¯';
+
+  const isEstimate = game.collector === undefined;
+
+  const msLeft = Math.max(
+    game.timeoutSeconds -
+      (isEstimate ? 0 : Date.now() - game.endTimeoutStartDate),
+    0
+  );
+  return `${isEstimate ? '~' : ''}${formatDuration(millisecondsToDuration(msLeft))}`;
+};
 
 const placeEgg = async (
   client: BotClient,
@@ -267,63 +352,6 @@ const placeEgg = async (
     maxUsers: 1
   });
   return collector;
-};
-
-const eggFound = async (game: Game, user: User) => {
-  try {
-    game.collector = undefined;
-    game.eggCount += 1;
-    game.scores.set(user.id, (game.scores.get(user.id) ?? 0) + 1);
-
-    wrapDBThrowable(incrementEggs)(
-      await (await game.guild()).members.fetch(user.id)
-    );
-
-    if (10 <= game.eggCount) {
-      finishGame(game, user);
-    } else {
-      const channel = await game.controlChannel();
-      channel?.send({ embeds: [await userFoundEggEmbed(user, game)] });
-
-      // Between 5 and 60 minutes
-      const cooldown = randomRange(5, 60) * 60 * 1000;
-
-      game.nextRoundTimeout = setTimeout(async () => {
-        try {
-          const guild = await game.guild();
-          game.initRound(guild);
-        } catch (e) {
-          logError(e, game.logger);
-        }
-      }, cooldown);
-    }
-  } catch (e) {
-    logError(e, game.logger);
-  }
-};
-
-const finishGame = async (game: Game, user?: User) => {
-  // Node.js manages to magically call the endTimeout even after the game has gone out of scope.
-  // Oh boy how I love object-based languages...
-  clearTimeout(game.endTimeout);
-
-  const channel = await game.controlChannel();
-  await channel?.send({ embeds: [await gameFinishedEmbed(game, user)] });
-
-  // Cleanup
-  const guild = await game.guild();
-  const cleanupMessages = new Array(...game.cleanupMessages);
-  games.delete(game.guildId);
-
-  // Remove reactions at the end as it has a high probability of failing
-  // (if the server have not given the bot sufficient rights)
-  for (const { messageId, channelId } of cleanupMessages) {
-    const channel = await guild.channels.fetch(channelId);
-    if (channel instanceof TextChannel) {
-      const message = await channel.messages.fetch(messageId);
-      await message.reactions.removeAll();
-    }
-  }
 };
 
 const games: Map<string, Game> = new Map();
@@ -346,22 +374,26 @@ const egghunt: ICommandBase & ISlashCommand & IMessageCommand = {
           ephemeral: true
         });
 
-      games.set(
-        interaction.guild.id,
-        new Game(client, logger, interaction.channel)
-      );
+      if (games.has(interaction.guild.id))
+        return interaction.reply(
+          `You cannot start another egg hunt while an egg hunt is currently ongoing. Time left of the current game: ${getFormattedTimeLeft(games.get(interaction.guild.id))}`
+        );
+
+      await interaction.deferReply();
+
+      const game = new Game(client, logger, interaction.channel);
+      games.set(interaction.guild.id, game);
+
+      await game.initRound(interaction.guild);
 
       const client_avatar_url = nullToUndefined(client.user?.avatarURL());
       const author = await getNickname(interaction.user, interaction.guild);
-      return interaction.reply({
+      return interaction.editReply({
         embeds: [gameStartEmbed(author, client_avatar_url)]
       });
     } catch (e) {
       logError(e, logger);
-      return interaction.reply({
-        content: 'Command failed. :(',
-        ephemeral: true
-      });
+      return interaction.reply('Command failed. :(');
     }
   },
   aliases: ['easter', 'easterhunt', 'eggs'],
@@ -374,7 +406,15 @@ const egghunt: ICommandBase & ISlashCommand & IMessageCommand = {
           'Command is only available in a guild text channel'
         );
 
-      games.set(message.guild.id, new Game(client, logger, message.channel));
+      if (games.has(message.guild.id))
+        return message.reply(
+          `You cannot start another egg hunt while an egg hunt is currently ongoing. Time left of the current game: ${getFormattedTimeLeft(games.get(message.guild.id))}`
+        );
+
+      const game = new Game(client, logger, message.channel);
+      games.set(message.guild.id, game);
+
+      await game.initRound(message.guild);
 
       const client_avatar_url = nullToUndefined(client.user?.avatarURL());
       const author = await getNickname(message.author, message.guild);

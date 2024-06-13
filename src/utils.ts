@@ -1,3 +1,4 @@
+import { Duration, intervalToDuration } from 'date-fns';
 import {
   AttachmentBuilder,
   Client,
@@ -88,8 +89,8 @@ export const errorToStr = (e: unknown): string =>
   e instanceof Error
     ? e.message
     : typeof e === 'string'
-    ? e
-    : JSON.stringify(e);
+      ? e
+      : JSON.stringify(e);
 
 export const logError = (e: unknown, logger: Logger) =>
   logger.log('error', errorToStr(e));
@@ -152,4 +153,9 @@ export const formatLeaderboards = (
     description:
       0 < content.length ? content : "There's nothing here. ¯\\_(ツ)_/¯"
   });
+};
+
+export const millisecondsToDuration = (msDuration: number): Duration => {
+  const now = Date.now();
+  return intervalToDuration({ start: now, end: new Date(now + msDuration) });
 };

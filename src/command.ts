@@ -3,17 +3,16 @@
  */
 
 import {
-  SlashCommandBuilder,
-  SlashCommandSubcommandsOnlyBuilder
-} from '@discordjs/builders';
-import { ChatInputCommandInteraction, Message } from 'discord.js';
+  ChatInputCommandInteraction,
+  Message,
+  SharedNameAndDescription,
+  SharedSlashCommand
+} from 'discord.js';
 import { Logger } from 'winston';
 import BotClient from './client.js';
 
 export interface ICommandBase {
-  data:
-    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
-    | SlashCommandSubcommandsOnlyBuilder;
+  data: SharedNameAndDescription & SharedSlashCommand;
   init?: (client: BotClient, logger: Logger) => Promise<void>;
 }
 
@@ -34,20 +33,13 @@ export interface IMessageCommand {
   ): Promise<unknown>;
 }
 
-// https://stackoverflow.com/questions/49707327/typescript-check-if-property-in-object-in-typesafe-way
-function hasOwnProperty<T, K extends PropertyKey>(
-  obj: T,
-  prop: K
-): obj is T & Record<K, unknown> {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
-}
+export const isCommand = (cmd: unknown): cmd is ICommandBase =>
+  typeof cmd === 'object' && cmd !== null && 'data' in cmd;
 
 export const isSlashCommand = (
   cmd: ICommandBase
-): cmd is ICommandBase & ISlashCommand =>
-  hasOwnProperty(cmd, 'handleInteraction');
+): cmd is ICommandBase & ISlashCommand => 'handleInteraction' in cmd;
 
 export const isMessageCommand = (
   cmd: ICommandBase
-): cmd is ICommandBase & IMessageCommand =>
-  hasOwnProperty(cmd, 'handleMessage');
+): cmd is ICommandBase & IMessageCommand => 'handleMessage' in cmd;

@@ -164,12 +164,12 @@ export const getLeaderboards = async (
   const bankEntries = (
     await Promise.all(
       db
-        .prepare(
+        .prepare<{ gid: string }, DBBank>(
           `SELECT * FROM bank
       WHERE bid IN (SELECT bid FROM guilds WHERE gid = @gid);`
         )
         .all({ gid: guild.id })
-        .map(async (p: DBBank): Promise<DBBank | undefined> => {
+        .map(async (p): Promise<DBBank | undefined> => {
           const member = await guild.members.fetch(p.id);
           return member
             ? { ...p, points: p.points + getTimePoints(member) }
@@ -264,8 +264,10 @@ export const toggleIdRecord = (
   // Only filtering on ids for users so user ids are shared between guilds
   const filter =
     type === RecordType.Guild ? 'id = @id AND gid = @gid' : 'id = @id';
-  const q = db.prepare(`SELECT * FROM ${table} WHERE ${filter}`);
-  const q_res: RecordDBEntry | undefined = q.get({ id: id, gid: gid });
+  const q = db.prepare<{ id: string; gid: string }, RecordDBEntry | undefined>(
+    `SELECT * FROM ${table} WHERE ${filter}`
+  );
+  const q_res = q.get({ id: id, gid: gid });
   const exists = q_res !== undefined;
   if (exists) {
     removeRecordEntry(table, id, gid, type);

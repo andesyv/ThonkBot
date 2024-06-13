@@ -67,16 +67,20 @@ const resetTimeout = (id: string) => {
   if (game === undefined) return;
 
   if (game.timeout) clearTimeout(game.timeout);
-  game.timeout = setTimeout(() => {
-    games[id] = undefined;
-  }, 10 * 60 * 1000);
+  game.timeout = setTimeout(
+    () => {
+      games[id] = undefined;
+    },
+    10 * 60 * 1000
+  );
 };
 
 const initateNewGame = (game_id: string, length = 5): Game => {
   const random_word = db
-    .prepare(
-      'SELECT * FROM words WHERE length = @length ORDER BY RANDOM() LIMIT 1'
-    )
+    .prepare<
+      { length: number },
+      DictEntry
+    >('SELECT * FROM words WHERE length = @length ORDER BY RANDOM() LIMIT 1')
     .get({ length: length });
   if (random_word && typeof random_word.word === 'string') {
     const game = {
@@ -110,16 +114,16 @@ const buildEmbed = (game: Game, user: string): EmbedBuilder => {
     title: game_won
       ? `:tada: You won the ${game.word.length} letter wordle game! :tada:`
       : game_lost
-      ? `Wordle game lost. :( The word was ${game.word}`
-      : `Wordle game! (${game.word.length} letters)`,
+        ? `Wordle game lost. :( The word was ${game.word}`
+        : `Wordle game! (${game.word.length} letters)`,
     description:
       game.guesses[game.guesses.length - 1] === game.word
         ? `${user} guessed the correct word, which was *${game.word}*! Congrats!`
         : game.guesses.length === 1
-        ? `${user} started a new wordle game with ${game.word.length} letters and guessed *${game.guesses[0]}*!`
-        : `${user} guessed the word *${
-            game.guesses[game.guesses.length - 1]
-          }*!`,
+          ? `${user} started a new wordle game with ${game.word.length} letters and guessed *${game.guesses[0]}*!`
+          : `${user} guessed the word *${
+              game.guesses[game.guesses.length - 1]
+            }*!`,
     footer:
       game_won || game_lost
         ? undefined
