@@ -89,8 +89,8 @@ export const errorToStr = (e: unknown): string =>
   e instanceof Error
     ? e.message
     : typeof e === 'string'
-    ? e
-    : JSON.stringify(e);
+      ? e
+      : JSON.stringify(e);
 
 export const logError = (e: unknown, logger: Logger) =>
   logger.log('error', errorToStr(e));

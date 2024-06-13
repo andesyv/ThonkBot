@@ -122,9 +122,11 @@ const init = async () => {
   client.once('ready', () => {
     logger.log(
       'info',
-      'Logged in as: ' + client.user?.tag ??
-        '¯\\_(ツ)_/¯' + ' - (' + client.user?.id ??
-        '¯\\_(ツ)_/¯' + ')'
+      'Logged in as: ' +
+        (client.user?.tag ?? '¯\\_(ツ)_/¯') +
+        ' - (' +
+        (client.user?.id ?? '¯\\_(ツ)_/¯') +
+        ')'
     );
   });
 

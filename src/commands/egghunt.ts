@@ -381,7 +381,7 @@ const egghunt: ICommandBase & ISlashCommand & IMessageCommand = {
 
       await interaction.deferReply();
 
-      let game = new Game(client, logger, interaction.channel);
+      const game = new Game(client, logger, interaction.channel);
       games.set(interaction.guild.id, game);
 
       await game.initRound(interaction.guild);
@@ -411,7 +411,7 @@ const egghunt: ICommandBase & ISlashCommand & IMessageCommand = {
           `You cannot start another egg hunt while an egg hunt is currently ongoing. Time left of the current game: ${getFormattedTimeLeft(games.get(message.guild.id))}`
         );
 
-      let game = new Game(client, logger, message.channel);
+      const game = new Game(client, logger, message.channel);
       games.set(message.guild.id, game);
 
       await game.initRound(message.guild);
