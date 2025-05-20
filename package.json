@@ -22,7 +22,7 @@
     "@types/better-sqlite3": "^7.6.10",
     "@types/node": "^20.14.2",
     "@types/node-schedule": "^2.1.7",
-    "axios": "^1.7.2",
+    "axios": "^1.8.2",
     "better-sqlite3": "11.0.0",
     "date-fns": "^3.6.0",
     "discord-api-types": "^0.37.88",
