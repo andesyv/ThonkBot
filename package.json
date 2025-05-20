@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@discordjs/rest": "^2.3.0",
-    "@octokit/request": "^9.1.1",
+    "@octokit/request": "^9.2.1",
     "@types/better-sqlite3": "^7.6.10",
     "@types/node": "^20.14.2",
     "@types/node-schedule": "^2.1.7",
