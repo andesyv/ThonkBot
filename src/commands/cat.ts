@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { logError, randomImageToEmbed } from '../utils.js';
+import { logError, randomImageToEmbed } from '../utils.ts';
 
 const cat: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -14,14 +14,12 @@ const cat: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return interaction.reply(
-        await randomImageToEmbed('data/Cats', 'Random cat')
-      );
+      return interaction.reply(await randomImageToEmbed('Cats', 'Random cat'));
     } catch (e) {
       logError(e, logger);
       return interaction.reply({
         content: 'Failed to send cat. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -32,12 +30,10 @@ const cat: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(
-        await randomImageToEmbed('data/Cats', 'Random cat')
-      );
+      return message.reply(await randomImageToEmbed('Cats', 'Random cat'));
     } catch (e) {
       logError(e, logger);
-      return message.channel.send('Failed to send cat. :(');
+      return message.reply('Failed to send cat. :(');
     }
   }
 };

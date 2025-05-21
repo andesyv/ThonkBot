@@ -14,20 +14,20 @@ import {
   TextChannel,
   User
 } from 'discord.js';
-import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
+import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.ts';
 import { Logger } from 'winston';
 import {
   formatLeaderboardsString,
   logError,
   millisecondsToDuration,
   shuffle
-} from '../utils.js';
-import BotClient from '../client.js';
+} from '../utils.ts';
+import BotClient from '../client.ts';
 import {
   getUserPointsEntry,
   updatePoints,
   wrapDBThrowable
-} from '../dbutils.js';
+} from '../dbutils.ts';
 import { formatDuration } from 'date-fns';
 
 interface MessageIdentifier {
@@ -221,7 +221,7 @@ class Game {
   async initRound(guild: Guild) {
     try {
       this.collector = await placeEgg(this.client, guild, this.eggCount);
-      this.logger.log('info', 'Placed a hidden egg');
+      this.logger.info('Placed a hidden egg');
       this.collector.on('collect', (_reaction, user) => {
         this.eggFound(user);
       });
@@ -314,7 +314,7 @@ class Game {
     this.endTimeout = setTimeout(async () => {
       try {
         this.finishGame();
-        this.logger.log('info', 'Egg hunt completed successfully!');
+        this.logger.info('Egg hunt completed successfully!');
       } catch (e) {
         logError(e, this.logger);
       }
@@ -371,7 +371,7 @@ const egghunt: ICommandBase & ISlashCommand & IMessageCommand = {
       if (!(interaction.channel instanceof TextChannel))
         return interaction.reply({
           content: 'Command is only available in a guild text channel',
-          ephemeral: true
+          flags: 'Ephemeral'
         });
 
       if (games.has(interaction.guild.id))

@@ -1,18 +1,29 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, EmbedBuilder, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { errorToStr, getCommandArgs, logError, rootDir } from '../utils.js';
+import { errorToStr, getCommandArgs, logError, rootDir } from '../utils.ts';
 import { request } from '@octokit/request';
 import path from 'path';
-import BotClient from '../client.js';
-import { readFile } from 'fs/promises';
+import BotClient from '../client.ts';
+import { access, readFile } from 'fs/promises';
+import { PathLike } from 'fs';
+
+const findVersionFile = async (): Promise<PathLike> => {
+  try {
+    const versionFilePath = path.join(rootDir, 'gitVersionHash.txt');
+    await access(versionFilePath);
+    return versionFilePath;
+  } catch (_) {
+    // If the file structure isn't as expected (e.g. we're running via tsx), attempt
+    // to use the command line path instead:
+    return path.join(process.cwd(), 'gitVersionHash.txt');
+  }
+};
 
 const getCurrentCommitHash = async (logger: Logger): Promise<string | null> => {
   try {
-    return (
-      await readFile(path.join(rootDir, 'gitVersionHash.txt'))
-    ).toString();
+    return (await readFile(await findVersionFile())).toString();
   } catch (e) {
     logger.log('warn', `Failed to fetch current commit hash: ${errorToStr(e)}`);
     return null;
@@ -84,7 +95,7 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -99,7 +110,7 @@ const patchnotes: ICommandBase & ISlashCommand & IMessageCommand = {
       const count = 0 < args.length ? parseInt(args[0]) : 1;
       const embeds = await getLastCommits(count, logger);
 
-      return message.channel.send({
+      return message.reply({
         content: `Last ${count} commits:`,
         embeds: embeds
       });

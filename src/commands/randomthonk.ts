@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { logError, randomImageToEmbed } from '../utils.js';
+import { logError, randomImageToEmbed } from '../utils.ts';
 
 const randomthonk: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -15,13 +15,13 @@ const randomthonk: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       return interaction.reply(
-        await randomImageToEmbed('data/ThonkEmojis', 'Random thonk')
+        await randomImageToEmbed('ThonkEmojis', 'Random thonk')
       );
     } catch (e) {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -32,8 +32,8 @@ const randomthonk: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(
-        await randomImageToEmbed('data/ThonkEmojis', 'Random thonk')
+      return message.reply(
+        await randomImageToEmbed('ThonkEmojis', 'Random thonk')
       );
     } catch (e) {
       logError(e, logger);

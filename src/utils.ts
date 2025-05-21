@@ -7,7 +7,7 @@ import {
   Message,
   User
 } from 'discord.js';
-import { readdir } from 'fs/promises';
+import { readdir, access } from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { Logger } from 'winston';
@@ -18,14 +18,29 @@ export const rootDir = path.join(
   '..' // When compiled to JavaScript, output gets put into an additional "dist" folder.
 );
 
-export const getRandomAssetFileFromFolder = async (
+export const getDataFolderPath = async (): Promise<string> => {
+  try {
+    const dataFolderPath = path.join(rootDir, 'data');
+    await access(dataFolderPath);
+    return dataFolderPath;
+  } catch (_) {
+    // If the file structure isn't as expected (e.g. we're running via tsx), attempt
+    // to use the command line path instead:
+    return path.join(process.cwd(), 'data');
+  }
+};
+
+export const getRandomAssetFileFromDataFolder = async (
   folder: string
 ): Promise<string> => {
-  const rootPath = path.join(rootDir, folder);
-  const files = await readdir(rootPath);
+  const dataRootPath = path.join(await getDataFolderPath(), folder);
+  const files = await readdir(dataRootPath);
 
   if (Array.isArray(files) && 0 < files.length)
-    return path.join(rootPath, files[Math.floor(Math.random() * files.length)]);
+    return path.join(
+      dataRootPath,
+      files[Math.floor(Math.random() * files.length)]
+    );
 
   throw new Error(`Could'nt find a random file in folder ${folder}`);
 };
@@ -39,10 +54,10 @@ export const randomImageToEmbed = async (
   folder: string,
   title?: string
 ): Promise<SharedMessageOptions> => {
-  const file = await getRandomAssetFileFromFolder(folder);
+  const file = await getRandomAssetFileFromDataFolder(folder);
   const attachment = new AttachmentBuilder(file);
   const embed = new EmbedBuilder({
-    title: title ?? undefined,
+    title,
     image: { url: `attachment://${path.basename(file)}` }
   });
   return {
@@ -93,7 +108,7 @@ export const errorToStr = (e: unknown): string =>
       : JSON.stringify(e);
 
 export const logError = (e: unknown, logger: Logger) =>
-  logger.log('error', errorToStr(e));
+  logger.error(errorToStr(e));
 
 /**
  * Attempts to look through all the guilds of the bot in search for a common guild with the user

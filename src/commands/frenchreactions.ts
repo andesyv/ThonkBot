@@ -5,15 +5,15 @@ import {
   TextChannel,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
+import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.ts';
 import { Logger } from 'winston';
 import {
   db,
   initRecordTable,
   toggleGuildRecord,
   toggleUserRecord
-} from '../dbutils.js';
-import { fetchGuildMember, logError } from '../utils.js';
+} from '../dbutils.ts';
+import { fetchGuildMember, logError } from '../utils.ts';
 import { franc } from 'franc';
 
 const enabledMessage = (enabled: boolean) =>
@@ -68,7 +68,7 @@ const frenchreactions: ICommandBase & ISlashCommand & IMessageCommand = {
           return interaction.reply({
             content:
               'Command currently only works in text channels or direct messages :/',
-            ephemeral: true
+            flags: 'Ephemeral'
           });
         }
       } else {
@@ -91,7 +91,7 @@ const frenchreactions: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -105,9 +105,9 @@ const frenchreactions: ICommandBase & ISlashCommand & IMessageCommand = {
       if (message.guild) {
         if (message.channel instanceof TextChannel) {
           const enabled = toggleGuildRecord('frenchreactions', message.channel);
-          return message.channel.send(enabledMessage(enabled));
+          return message.reply(enabledMessage(enabled));
         } else {
-          return message.channel.send(
+          return message.reply(
             'Command currently only works in text channels or direct messages :/'
           );
         }
@@ -116,13 +116,13 @@ const frenchreactions: ICommandBase & ISlashCommand & IMessageCommand = {
         const member = await fetchGuildMember(client, message.author);
         if (member) {
           const enabled = toggleUserRecord('frenchreactions', member);
-          return message.channel.send(enabledMessage(enabled));
+          return message.reply(enabledMessage(enabled));
         } else {
           logger.log(
             'error',
             `Failed to find common channel with user: ${message.author.tag} (${message.author.id})`
           );
-          return message.channel.send(
+          return message.reply(
             "You have to share a guild with me to use that command, and I could'nt find one. :/"
           );
         }

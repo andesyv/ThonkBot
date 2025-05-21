@@ -15,11 +15,12 @@ import {
   IMessageCommand,
   ISlashCommand,
   isCommand
-} from './command.js';
-import { initDB } from './dbutils.js';
-import BotClient from './client.js';
-import { logError } from './utils.js';
+} from './command.ts';
+import { initDB } from './dbutils.ts';
+import BotClient from './client.ts';
+import { logError } from './utils.ts';
 import { fileURLToPath, pathToFileURL } from 'url';
+import minimist from 'minimist';
 
 type CommandType =
   | ICommandBase
@@ -46,34 +47,49 @@ const fetchCommandPaths = async (root: string): Promise<string[]> => {
 
 const loadCommands = async (logger: winston.Logger): Promise<CommandType[]> => {
   const dirname = path.dirname(fileURLToPath(import.meta.url));
-  const commandPaths = await fetchCommandPaths(
-    path.normalize(path.join(dirname, 'commands'))
+  const excludeSet = new Set(process.env.EXCLUDE_COMMANDS?.split(';'));
+  if (excludeSet.size > 0)
+    logger.verbose(
+      `Excluding commands: ${Array.from(excludeSet.keys()).join(', ')}`
+    );
+  else logger.verbose('No commands are excluded');
+  const commandPaths = (
+    await fetchCommandPaths(path.normalize(path.join(dirname, 'commands')))
+  ).filter((commandPath) => !excludeSet.has(path.parse(commandPath).name));
+
+  logger.verbose(
+    `Loading ${commandPaths.length} command(s): ${commandPaths.join(', ')}`
   );
+
   return Promise.all(
     commandPaths.map(async (filePath): Promise<CommandType> => {
-      const module = await import(pathToFileURL(filePath).href);
+      const fileUrl = pathToFileURL(filePath).href;
+      const module = await import(fileUrl);
       const commandIsh = module?.default ?? undefined;
-      if (commandIsh === undefined || commandIsh === null)
+      if (commandIsh === undefined || commandIsh === null) {
+        logger.warning('A command failed loading!');
         throw Error(`Failed to import command ${filePath}`);
+      }
 
       if (!isCommand(commandIsh))
         throw Error(`${filePath} is not a valid command`);
 
-      logger.log('info', `${path.basename(filePath)} loaded`);
+      logger.verbose(`${path.basename(filePath)} loaded`);
       return commandIsh;
     })
   );
 };
 
+const cliArgs = minimist(process.argv.slice(2));
+const verbose =
+  cliArgs.verbose !== undefined || process.env.VERBOSE !== undefined;
+
 // Initialize logger
 const logger = winston.createLogger({
-  level: 'info',
+  // levels: winston.config.npm.levels, // Default
   format: winston.format.json(),
   transports: [
-    //
-    // - Write to all logs with level `info` and below to `combined.log`
-    // - Write all logs error (and below) to `error.log`.
-    //
+    // Logs with "error" level will be written to error.log
     new winston.transports.File({
       filename: 'error.log',
       level: 'error',
@@ -84,6 +100,7 @@ const logger = winston.createLogger({
         winston.format.json()
       )
     }),
+    // Logs with "error" or "warning" level will be written to warning.log
     new winston.transports.File({
       filename: 'warning.log',
       level: 'warn',
@@ -94,15 +111,20 @@ const logger = winston.createLogger({
         winston.format.json()
       )
     }),
+    // Logs with levels "info" and below will be written to the console.
     new winston.transports.Console({
+      level: verbose ? 'verbose' : 'info',
       format: winston.format.colorize()
     })
   ]
 });
 
+logger.verbose('Verbose logging is enabled');
+
 const init = async () => {
-  logger.log('info', 'Loading commands...');
+  logger.info('Loading commands...');
   const commands = await loadCommands(logger);
+  logger.info(`Successfully loaded ${commands.length} commands`);
 
   // Client construction
   const client = new BotClient(
@@ -130,12 +152,18 @@ const init = async () => {
     );
   });
 
+  if (process.env.TOKEN === undefined)
+    throw new Error('Missing TOKEN environment variable');
+
+  if (process.env.CLIENT_ID === undefined)
+    throw new Error('Missing CLIENT_ID environment variable');
+
   // Interaction registration:
   const rest = new REST({ version: '9' }).setToken(process.env.TOKEN ?? '');
   await rest.put(Routes.applicationCommands(process.env.CLIENT_ID ?? ''), {
     body: [...client.interactionCommands.values()].map((c) => c.data.toJSON())
   });
-  logger.log('info', 'Successfully registered application commands.');
+  logger.info('Successfully registered application commands.');
 
   // Message handling (for old command format)
   client.on('messageCreate', async (message) => {
@@ -149,7 +177,7 @@ const init = async () => {
 
         const command = client.messageCommands.get(cmd);
         if (command !== undefined) {
-          logger.log('info', `Command ${command.data.name} executed`);
+          logger.info(`Command ${command.data.name} executed`);
           await command.handleMessage(message, client, logger);
           return;
         }
@@ -168,7 +196,7 @@ const init = async () => {
 
       const command = client.interactionCommands.get(interaction.commandName);
       if (command !== undefined) {
-        logger.log('info', `Interaction ${command.data.name} executed`);
+        logger.info(`Interaction ${command.data.name} executed`);
         await command.handleInteraction(interaction, client, logger);
       }
     } catch (e) {
@@ -188,4 +216,8 @@ const init = async () => {
   client.login(process.env.TOKEN ?? '');
 };
 
-init();
+try {
+  await init();
+} catch (e) {
+  logError(e, logger);
+}

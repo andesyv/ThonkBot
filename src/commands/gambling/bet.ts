@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.ts';
 import { Logger } from 'winston';
-import { getUserPointsEntry, updatePoints } from '../../dbutils.js';
-import { getCommandArgs, getNickname, logError } from '../../utils.js';
+import { getUserPointsEntry, updatePoints } from '../../dbutils.ts';
+import { getCommandArgs, getNickname, logError } from '../../utils.ts';
 
 export const gamble = (points: number, amount: number): [number, number] => {
   const r = Math.round(Math.random() * 100);
@@ -74,7 +74,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -116,9 +116,7 @@ const bet: ICommandBase & ISlashCommand & IMessageCommand = {
           }
         }
       } else {
-        return message.channel.send(
-          'Command is only available in a server. :('
-        );
+        return message.reply('Command is only available in a server. :(');
       }
     } catch (e) {
       logError(e, logger);

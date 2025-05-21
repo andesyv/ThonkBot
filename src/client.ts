@@ -5,7 +5,7 @@ import {
   ISlashCommand,
   isMessageCommand,
   isSlashCommand
-} from './command.js';
+} from './command.ts';
 import { Job } from 'node-schedule';
 
 type CommandType =
@@ -14,7 +14,6 @@ type CommandType =
   | (ICommandBase & ISlashCommand);
 
 export default class BotClient extends Client {
-  private commands: CommandType[];
   public readonly interactionCommands: Map<
     string,
     ICommandBase & ISlashCommand
@@ -25,7 +24,6 @@ export default class BotClient extends Client {
 
   public constructor(options: ClientOptions, commands: CommandType[]) {
     super(options);
-    this.commands = commands;
     this.interactionCommands = new Map(
       commands.filter(isSlashCommand).map((cmd) => [cmd.data.name, cmd])
     );

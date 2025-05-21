@@ -6,7 +6,7 @@ import {
   ScorePointRepresentation,
   formatLeaderboards,
   logError
-} from './utils.js';
+} from './utils.ts';
 export const db = new SQLite('./db.sqlite');
 
 export interface DBBank {

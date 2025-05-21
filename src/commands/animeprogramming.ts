@@ -6,9 +6,9 @@ import {
   EmbedBuilder,
   Message
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { getCommandArgs, logError } from '../utils.js';
+import { getCommandArgs, logError } from '../utils.ts';
 import { writeFile } from 'fs/promises';
 import { basename } from 'path';
 import axios from 'axios';
@@ -100,7 +100,7 @@ const animeprogramming: ICommandBase & ISlashCommand & IMessageCommand = {
     if (language !== undefined && sanitizedLanguage === undefined) {
       return interaction.reply({
         content: "Anime girls don't program that language.",
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
 

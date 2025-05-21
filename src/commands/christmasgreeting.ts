@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import christmas from '../../data/christmas.json' assert { type: 'json' };
-import { getNickname, logError } from '../utils.js';
+import christmas from '../../data/christmas.json' with { type: 'json' };
+import { getNickname, logError } from '../utils.ts';
 
 const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -36,7 +36,7 @@ const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
         void target.send(`${greeting} Best Regards ${author}!`);
         return interaction.reply({
           content: 'He/she/they liked it. (I think.)',
-          ephemeral: true
+          flags: 'Ephemeral'
         });
       } else {
         interaction.reply(greeting);
@@ -45,7 +45,7 @@ const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -65,7 +65,7 @@ const christmasgreeting: ICommandBase & ISlashCommand & IMessageCommand = {
         const author = getNickname(message.member, message.author);
         target.send(`${greeting} Best Regards ${author}!`);
       } else {
-        return message.channel.send(greeting);
+        return message.reply(greeting);
       }
     } catch (e) {
       logError(e, logger);

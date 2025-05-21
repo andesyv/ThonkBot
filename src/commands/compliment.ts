@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import compliments from '../../data/compliments.json' assert { type: 'json' };
-import { logError } from '../utils.js';
+import compliments from '../../data/compliments.json' with { type: 'json' };
+import { logError } from '../utils.ts';
 
 const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -35,7 +35,7 @@ const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
         void target.send(compliment);
         return interaction.reply({
           content: 'He/she/they liked it. (I think.)',
-          ephemeral: true
+          flags: 'Ephemeral'
         });
       } else {
         return interaction.reply(compliment);
@@ -44,7 +44,7 @@ const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -63,7 +63,7 @@ const compliment: ICommandBase & ISlashCommand & IMessageCommand = {
       if (target && !target.user.bot) {
         target.send(compliment);
       } else {
-        return message.channel.send(compliment);
+        return message.reply(compliment);
       }
     } catch (e) {
       logError(e, logger);

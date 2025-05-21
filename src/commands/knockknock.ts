@@ -1,9 +1,9 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import jokes from '../../data/jokes.json' assert { type: 'json' };
-import { logError } from '../utils.js';
+import jokes from '../../data/jokes.json' with { type: 'json' };
+import { logError } from '../utils.ts';
 
 const knockknock: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -22,7 +22,7 @@ const knockknock: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -33,7 +33,7 @@ const knockknock: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(
+      return message.reply(
         jokes.KnockKnock[Math.floor(Math.random() * jokes.KnockKnock.length)]
       );
     } catch (e) {
