@@ -2,6 +2,6 @@
 git fetch
 git pull
 git submodule update --recursive --init
-yarn install
+npm install
 tsc
 pm2 restart ThonkBot

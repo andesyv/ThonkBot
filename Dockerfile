@@ -11,14 +11,10 @@ ENV GIPHY_KEY="Giphy token"
 
 # Global packages and configurations
 RUN npm install -g pm2
-# Enable yarn > 1.x
-RUN corepack enable
-RUN yarn set version stable
 
 # Install dependencies and compile TypeScript
-# Set production mode (making yarn only install non-dev dependencies)
-RUN yarn workspaces focus --production
-RUN yarn run build
+RUN npm install --omit=dev
+RUN npm run build
 
 # Run
 WORKDIR /data

@@ -40,16 +40,12 @@ a Node.JS application.
 # Install Node.JS > 18
 sudo apt install -y nodejs
 
-# Install the required Node package manager (yarn) either via your distributions package manager or via npm:
-sudo apt install -y yarn
-sudo npm install -g yarn
-
 # Install required packages:
-yarn install
+npm install
 ```
 12. Finally, run the application. If `tsx` is installed (`npm install -g tsx`) you can run the `start` script directly:
 ```sh
-yarn start # Using yarn
+npm start # Using npm
 tsx src/main.ts # Using tsx
 ```
 or you can compile the typescript and run the JS instead:
