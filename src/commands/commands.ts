@@ -1,9 +1,9 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Message } from 'discord.js';
-import { ICommandBase, IMessageCommand } from '../command.js';
+import { ICommandBase, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import BotClient from '../client.js';
-import { logError } from '../utils.js';
+import BotClient from '../client.ts';
+import { logError } from '../utils.ts';
 
 const commands: ICommandBase & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -19,7 +19,7 @@ const commands: ICommandBase & IMessageCommand = {
       const commands = [...client.messageCommands.keys()]
         .map((s) => `\`${s}\``)
         .join(', ');
-      return message.channel.send(
+      return message.reply(
         `All available commands and their aliases:\n${commands}`
       );
     } catch (e) {

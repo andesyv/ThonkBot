@@ -9,11 +9,11 @@ import {
   ActionRowBuilder,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand } from '../command.js';
+import { ICommandBase, ISlashCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { db } from '../dbutils.js';
+import { db } from '../dbutils.ts';
 import { default as axios } from 'axios';
-import { getNickname, logError, splitToChunks } from '../utils.js';
+import { getNickname, logError, splitToChunks } from '../utils.ts';
 
 interface DictEntry {
   word: string;
@@ -34,7 +34,7 @@ export const initWords = async (client: Client, logger: Logger) => {
   const tableIsEmpty =
     db.prepare('SELECT * FROM words LIMIT 1').get() === undefined;
   if (tableIsEmpty) {
-    logger.log('info', 'Rebuilding dictionary database');
+    logger.info('Rebuilding dictionary database');
     const { data } = await axios.get<Record<string, number>>(DICTIONARY_URL, {
       responseType: 'json'
     });
@@ -49,7 +49,7 @@ export const initWords = async (client: Client, logger: Logger) => {
         ([key]): DictEntry => ({ word: key, length: key.length })
       )
     );
-    logger.log('info', 'Finished dictionary database');
+    logger.info('Finished building dictionary database');
   }
 };
 
@@ -220,7 +220,7 @@ const wordle: ICommandBase & ISlashCommand = {
           await interaction.reply({
             content:
               "Could'nt find a word to start a wordle game. Try a different word-length.",
-            ephemeral: true
+            flags: 'Ephemeral'
           });
           throw e;
         }
@@ -228,19 +228,19 @@ const wordle: ICommandBase & ISlashCommand = {
         if (guess.length !== game.word.length) {
           return interaction.reply({
             content: `Your guessed word has to be of the same length as the secret word, which is ${game.word.length}. I won't count this guess.`,
-            ephemeral: true
+            flags: 'Ephemeral'
           });
         } else if (game.guesses.includes(guess)) {
           return interaction.reply({
             content:
               "Why would you spend your precious guess on a word that's already been guessed? I won't count this one.",
-            ephemeral: true
+            flags: 'Ephemeral'
           });
         } else if (!isWord(guess)) {
           return interaction.reply({
             content:
               "Sorry, unfortunately my database don't count that as a word. Please try another one. I won't count that guess.",
-            ephemeral: true
+            flags: 'Ephemeral'
           });
         }
         game.guesses.push(guess);
@@ -280,7 +280,7 @@ const wordle: ICommandBase & ISlashCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   }

@@ -37,23 +37,16 @@ a Node.JS application.
 9. Use the generated link to add your bot to a server.
 10. Install all the requirements for the bot. Below are some Linux instructions, but Windows follows a similar approach:
 ```sh
-# Some Debian distros don't ship with the version of Node.JS used by the bot in their package managers, so to install Node.JS > 18 do this to fetch the package repos:
-curl -sL https://deb.nodesource.com/setup_18.x | sudo bash -
-
 # Install Node.JS > 18
 sudo apt install -y nodejs
 
-# (Optional) Install node packages used by the project.:
-sudo npm install -g yarn typescript
-
 # Install required packages:
-yarn install # with yarn
-npm install # with NPM
+npm install
 ```
-12. Finally, run the application. If `node-dev` is installed (`npm install -g node-dev`) you can run the `start` script directly:
+12. Finally, run the application. If `tsx` is installed (`npm install -g tsx`) you can run the `start` script directly:
 ```sh
-yarn start # Using yarn
 npm start # Using npm
+tsx src/main.ts # Using tsx
 ```
 or you can compile the typescript and run the JS instead:
 ```sh

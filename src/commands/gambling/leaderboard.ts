@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.ts';
 import { Logger } from 'winston';
-import { getLeaderboards } from '../../dbutils.js';
-import { logError } from '../../utils.js';
+import { getLeaderboards } from '../../dbutils.ts';
+import { logError } from '../../utils.ts';
 
 const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -33,7 +33,7 @@ const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -47,12 +47,10 @@ const leaderboard: ICommandBase & ISlashCommand & IMessageCommand = {
       if (message.member) {
         const embed = await getLeaderboards(message.member.guild);
         return embed
-          ? message.channel.send({ embeds: [embed] })
-          : message.channel.send("There's no leaderboards yet. :(");
+          ? message.reply({ embeds: [embed] })
+          : message.reply("There's no leaderboards yet. :(");
       } else {
-        return message.channel.send(
-          'Command is only available in a server. :('
-        );
+        return message.reply('Command is only available in a server. :(');
       }
     } catch (e) {
       logError(e, logger);

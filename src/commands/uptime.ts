@@ -1,9 +1,9 @@
 import { SlashCommandBuilder, time } from '@discordjs/builders';
 import { Client, Message, ChatInputCommandInteraction } from 'discord.js';
-import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
+import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { db, wrapDBThrowable } from '../dbutils.js';
-import { logError, millisecondsToDuration } from '../utils.js';
+import { db, wrapDBThrowable } from '../dbutils.ts';
+import { logError, millisecondsToDuration } from '../utils.ts';
 import { RecurrenceRule, scheduleJob } from 'node-schedule';
 import { parseISO, differenceInMilliseconds, formatDuration } from 'date-fns';
 
@@ -96,7 +96,7 @@ const uptime: ICommandBase & ISlashCommand & IMessageCommand = {
     const rule = new RecurrenceRule();
     rule.minute = Array.from({ length: 6 }, (_, i) => i * 10);
     client.jobs.push(scheduleJob(rule, () => updateCurrentTime(logger)));
-    logger.log('info', 'Setup uptime logging job');
+    logger.info('Setup uptime logging job');
   },
   handleInteraction: async (
     interaction: ChatInputCommandInteraction,
@@ -122,7 +122,7 @@ const uptime: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       // Update current time before sending message
       updateCurrentTime(logger);
-      return message.channel.send(buildMessageContent());
+      return message.reply(buildMessageContent());
     } catch (e) {
       logError(e, logger);
       return message.reply('Command failed. :(');

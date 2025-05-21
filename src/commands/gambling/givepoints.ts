@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.ts';
 import { Logger } from 'winston';
-import { getUserPointsEntry, updatePoints } from '../../dbutils.js';
-import { getCommandArgs, getNickname, logError } from '../../utils.js';
+import { getUserPointsEntry, updatePoints } from '../../dbutils.ts';
+import { getCommandArgs, getNickname, logError } from '../../utils.ts';
 
 const parseNumber = (s: string): number | undefined => {
   const n = Number.parseInt(s);
@@ -43,7 +43,7 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
         if (target === interaction.member) {
           return interaction.reply({
             content: 'You cannot give points to yourself!',
-            ephemeral: true
+            flags: 'Ephemeral'
           });
         } else if (!(target instanceof GuildMember)) {
           throw new Error('Somehow managed to target user not in guild');
@@ -55,7 +55,7 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
         if (senderPoints <= 0) {
           return interaction.reply({
             content: "You're broke!",
-            ephemeral: true
+            flags: 'Ephemeral'
           });
         }
         const amount = Math.min(
@@ -79,7 +79,7 @@ const givepoints: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },

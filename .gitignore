@@ -1,5 +1,12 @@
 # Node files
 node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 # Generated files
 *.log
@@ -15,3 +22,6 @@ temp.*
 # build files
 build
 dist
+
+# VS Code
+.vscode

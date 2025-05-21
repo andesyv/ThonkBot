@@ -8,10 +8,10 @@ import {
   EmbedBuilder,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
 import axios from 'axios';
-import { logError } from '../utils.js';
+import { logError } from '../utils.ts';
 
 interface SpookyApiResponse {
   data: {
@@ -52,7 +52,7 @@ const sendPersonalSpook = async (
         url,
         `Spooked by ${
           sender instanceof GuildMember
-            ? sender.nickname ?? sender.user.username
+            ? (sender.nickname ?? sender.user.username)
             : sender.username
         }!`
       )
@@ -69,7 +69,7 @@ const getGuildUser = (
   guild: Guild | null,
   user?: User
 ): GuildMember | undefined => {
-  return user ? guild?.members.resolve(user) ?? undefined : undefined;
+  return user ? (guild?.members.resolve(user) ?? undefined) : undefined;
 };
 
 const spook: ICommandBase & ISlashCommand & IMessageCommand = {
@@ -87,7 +87,7 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
     try {
       const target = interaction.options.getMember('target');
       if (target instanceof GuildMember && !target.user.bot) {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: 'Ephemeral' });
 
         const author =
           getGuildUser(interaction.guild, interaction.user) ?? interaction.user;
@@ -105,7 +105,7 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -128,7 +128,7 @@ const spook: ICommandBase & ISlashCommand & IMessageCommand = {
         message.author.send({ embeds: [embed] });
       } else {
         const url = await getRandomSpookImageUrl();
-        return message.channel.send({
+        return message.reply({
           embeds: [generateSpookEmbed(url, 'Spooked!')]
         });
       }

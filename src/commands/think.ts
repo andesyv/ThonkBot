@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ChatInputCommandInteraction, Client, Message } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { logError } from '../utils.js';
+import { logError } from '../utils.ts';
 
 const think: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -19,7 +19,7 @@ const think: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -30,7 +30,7 @@ const think: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(':thinking:');
+      return message.reply(':thinking:');
     } catch (e) {
       logError(e, logger);
       return message.reply('Command failed. :(');

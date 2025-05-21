@@ -5,11 +5,11 @@ import {
   Message,
   SlashCommandBuilder
 } from 'discord.js';
-import { ICommandBase, IMessageCommand, ISlashCommand } from '../../command.js';
+import { ICommandBase, IMessageCommand, ISlashCommand } from '../../command.ts';
 import { Logger } from 'winston';
-import { getNickname, logError } from '../../utils.js';
-import { getUserPointsEntry, updatePoints } from '../../dbutils.js';
-import { formatReply, gamble } from './bet.js';
+import { getNickname, logError } from '../../utils.ts';
+import { getUserPointsEntry, updatePoints } from '../../dbutils.ts';
+import { formatReply, gamble } from './bet.ts';
 
 const beteverything: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -70,7 +70,7 @@ const beteverything: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -82,9 +82,7 @@ const beteverything: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       if (!message.member)
-        return message.channel.send(
-          'Command is only available in a server. :('
-        );
+        return message.reply('Command is only available in a server. :(');
 
       let { points } = await getUserPointsEntry(message.member);
       let nextMessage = message;

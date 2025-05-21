@@ -8,7 +8,7 @@ import {
   ChatInputCommandInteraction,
   MessageCreateOptions
 } from 'discord.js';
-import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.js';
+import { ICommandBase, IMessageCommand, ISlashCommand } from '../command.ts';
 import { Logger } from 'winston';
 import {
   db,
@@ -19,13 +19,13 @@ import {
   toggleGuildRecord,
   toggleUserRecord,
   wrapDBThrowable
-} from '../dbutils.js';
+} from '../dbutils.ts';
 import * as path from 'path';
-import { fetchGuildMember, logError, rootDir } from '../utils.js';
+import { fetchGuildMember, getDataFolderPath, logError } from '../utils.ts';
 import { RecurrenceRule, scheduleJob } from 'node-schedule';
 
-const buildMessageContent = (): MessageCreateOptions => {
-  const file = path.join(rootDir, 'data', 'wednesday.jpg');
+const buildMessageContent = async (): Promise<MessageCreateOptions> => {
+  const file = path.join(await getDataFolderPath(), 'wednesday.jpg');
   const attachment = new AttachmentBuilder(file);
   const embed = new EmbedBuilder({
     image: { url: `attachment://${path.basename(file)}` }
@@ -41,9 +41,9 @@ const getAll = wrapDBThrowable((): RecordDBEntry[] =>
 );
 
 const notifyWednesdays = async (client: Client, logger: Logger) => {
-  logger.log('info', "It's wednesday my dudes!");
+  logger.info("It's wednesday my dudes!");
   try {
-    const message = buildMessageContent();
+    const message = await buildMessageContent();
     const ids = getAll();
 
     for (const { id, gid, type } of ids) {
@@ -99,7 +99,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
     rule.hour = 12;
     rule.minute = 0;
     client.jobs.push(scheduleJob(rule, () => notifyWednesdays(client, logger)));
-    logger.log('info', 'Setup wednesday notifier job');
+    logger.info('Setup wednesday notifier job');
   },
   handleInteraction: async (
     interaction: ChatInputCommandInteraction,
@@ -119,7 +119,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
           return interaction.reply({
             content:
               'Command currently only works in text channels or direct messages :/',
-            ephemeral: true
+            flags: 'Ephemeral'
           });
         }
       } else {
@@ -146,7 +146,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -160,13 +160,13 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
       if (message.guild) {
         if (message.channel instanceof TextChannel) {
           const enabled = toggleGuildRecord('wednesdays', message.channel);
-          return message.channel.send(
+          return message.reply(
             enabled
               ? "I'll be sure to let everyone know!"
               : "Okay, I'll stop reminding everyone. :("
           );
         } else {
-          return message.channel.send(
+          return message.reply(
             'Command currently only works in text channels or direct messages :/'
           );
         }
@@ -175,7 +175,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
         const member = await fetchGuildMember(client, message.author);
         if (member) {
           const enabled = toggleUserRecord('wednesdays', member);
-          return message.channel.send(
+          return message.reply(
             enabled
               ? "Okay, I'll be sure to let you know!"
               : "Alright, I won't let you know anymore."
@@ -185,7 +185,7 @@ const wednesdayreminder: ICommandBase & ISlashCommand & IMessageCommand = {
             'error',
             `Failed to find common channel with user: ${message.author.tag} (${message.author.id})`
           );
-          return message.channel.send(
+          return message.reply(
             "You have to share a guild with me to use that command, and I could'nt find one. :/"
           );
         }

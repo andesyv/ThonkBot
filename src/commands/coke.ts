@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Client, Message, ChatInputCommandInteraction } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { logError, randomImageToEmbed } from '../utils.js';
+import { logError, randomImageToEmbed } from '../utils.ts';
 
 const coke: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -14,12 +14,12 @@ const coke: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return interaction.reply(await randomImageToEmbed('data/Coke'));
+      return interaction.reply(await randomImageToEmbed('Coke'));
     } catch (e) {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -30,7 +30,7 @@ const coke: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(await randomImageToEmbed('data/Coke'));
+      return message.reply(await randomImageToEmbed('Coke'));
     } catch (e) {
       logError(e, logger);
       return message.reply('Command failed. :(');

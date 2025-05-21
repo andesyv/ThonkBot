@@ -5,14 +5,19 @@ import {
   Client,
   Message
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
-import { logError, rootDir, SharedMessageOptions, shuffle } from '../utils.js';
+import {
+  getDataFolderPath,
+  logError,
+  SharedMessageOptions,
+  shuffle
+} from '../utils.ts';
 import * as path from 'path';
 import { readdir, stat } from 'fs/promises';
 
 const fetchManySpooks = async (): Promise<SharedMessageOptions> => {
-  const dirpath = path.join(rootDir, 'data', 'Spooks');
+  const dirpath = path.join(await getDataFolderPath(), 'Spooks');
   const files = shuffle(await readdir(dirpath));
   const discordFileSizeLimit = 8 * 1024 * 1024;
 
@@ -46,7 +51,7 @@ const manyspooks: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -57,7 +62,7 @@ const manyspooks: ICommandBase & ISlashCommand & IMessageCommand = {
     logger: Logger
   ): Promise<unknown> => {
     try {
-      return message.channel.send(await fetchManySpooks());
+      return message.reply(await fetchManySpooks());
     } catch (e) {
       logError(e, logger);
       return message.reply('Command failed. :(');

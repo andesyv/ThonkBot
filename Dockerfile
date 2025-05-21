@@ -9,10 +9,12 @@ ENV CLIENT_ID="Your client ID"
 ENV TOKEN="Your client bot token"
 ENV GIPHY_KEY="Giphy token"
 
+# Global packages and configurations
+RUN npm install -g pm2
+
 # Install dependencies and compile TypeScript
-RUN yarn install
-RUN yarn global add pm2
-RUN yarn run build
+RUN npm install --omit=dev
+RUN npm run build
 
 # Run
 WORKDIR /data

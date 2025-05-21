@@ -9,7 +9,7 @@ import {
   SharedSlashCommand
 } from 'discord.js';
 import { Logger } from 'winston';
-import BotClient from './client.js';
+import BotClient from './client.ts';
 
 export interface ICommandBase {
   data: SharedNameAndDescription & SharedSlashCommand;

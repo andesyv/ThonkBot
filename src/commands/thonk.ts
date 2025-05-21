@@ -5,10 +5,10 @@ import {
   Client,
   Message
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../command.ts';
 import { Logger } from 'winston';
 import * as path from 'path';
-import { logError, rootDir } from '../utils.js';
+import { getDataFolderPath, logError } from '../utils.ts';
 
 const thonk: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -21,14 +21,14 @@ const thonk: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       const attachment = new AttachmentBuilder(
-        path.join(rootDir, 'data/ThonkEmojis/thonk.png')
+        path.join(await getDataFolderPath(), 'ThonkEmojis/thonk.png')
       );
       return interaction.reply({ files: [attachment] });
     } catch (e) {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -40,9 +40,9 @@ const thonk: ICommandBase & ISlashCommand & IMessageCommand = {
   ): Promise<unknown> => {
     try {
       const attachment = new AttachmentBuilder(
-        path.join(rootDir, 'data/ThonkEmojis/thonk.png')
+        path.join(await getDataFolderPath(), 'ThonkEmojis/thonk.png')
       );
-      return message.channel.send({ files: [attachment] });
+      return message.reply({ files: [attachment] });
     } catch (e) {
       logError(e, logger);
       return message.reply('Command failed. :(');

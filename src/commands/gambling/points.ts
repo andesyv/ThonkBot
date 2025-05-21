@@ -5,10 +5,10 @@ import {
   GuildMember,
   ChatInputCommandInteraction
 } from 'discord.js';
-import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.js';
+import { ICommandBase, ISlashCommand, IMessageCommand } from '../../command.ts';
 import { Logger } from 'winston';
-import { getUserPointsEntry } from '../../dbutils.js';
-import { getNickname, logError } from '../../utils.js';
+import { getUserPointsEntry } from '../../dbutils.ts';
+import { getNickname, logError } from '../../utils.ts';
 
 const points: ICommandBase & ISlashCommand & IMessageCommand = {
   data: new SlashCommandBuilder()
@@ -33,7 +33,7 @@ const points: ICommandBase & ISlashCommand & IMessageCommand = {
       logError(e, logger);
       return interaction.reply({
         content: 'Command failed. :(',
-        ephemeral: true
+        flags: 'Ephemeral'
       });
     }
   },
@@ -47,13 +47,9 @@ const points: ICommandBase & ISlashCommand & IMessageCommand = {
       if (message.member) {
         const name = getNickname(message.member, message.author);
         const entry = await getUserPointsEntry(message.member);
-        return message.channel.send(
-          `*${name}* has *${entry.points}* sthonks:tm:.`
-        );
+        return message.reply(`*${name}* has *${entry.points}* sthonks:tm:.`);
       } else {
-        return message.channel.send(
-          'Command is only available in a server. :('
-        );
+        return message.reply('Command is only available in a server. :(');
       }
     } catch (e) {
       logError(e, logger);
