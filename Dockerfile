@@ -16,7 +16,8 @@ RUN corepack enable
 RUN yarn set version stable
 
 # Install dependencies and compile TypeScript
-RUN yarn install
+# Set production mode (making yarn only install non-dev dependencies)
+RUN yarn workspaces focus --production
 RUN yarn run build
 
 # Run
