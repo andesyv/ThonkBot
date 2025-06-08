@@ -1,0 +1,17 @@
+# Development files
+.dockerignore
+.prettierrc
+Dockerfile
+eslint.config.js
+LICENSE
+README.md
+template.env
+
+# Unecessary runtime files
+deploy.sh
+
+# Git
+.github
+.gitattributes
+.gitignore
+.gitmodules

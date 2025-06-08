@@ -53,11 +53,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Create a file containing the hash of the currently checked out commit
-      # (used by the "patch" command to know which version is the currently deployed one)
-      - name: Save Git hash to container local file
-        run: git rev-parse --short HEAD > gitVersionHash.txt
-
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
