@@ -8,15 +8,21 @@ import {
   User
 } from 'discord.js';
 import { readdir, access } from 'fs/promises';
+import minimist from 'minimist';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { Logger } from 'winston';
 
-export const rootDir = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '..',
-  '..' // When compiled to JavaScript, output gets put into an additional "dist" folder.
-);
+// When compiled to JavaScript, output gets put into an additional "dist" folder. But when debugging through tsx,
+// it does not. Thus a simple solution right here is to just pass an command line argument whenever running through
+// tsx so we get the correct base path.
+// (Yes, there's probably some more clever solution, but this was by far the simplest)
+const cliArgs = minimist(process.argv.slice(2));
+const debugMode = cliArgs.tsx !== undefined || process.env.TSX !== undefined;
+
+export const rootDir = debugMode
+  ? path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
+  : path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 export const getDataFolderPath = async (): Promise<string> => {
   try {
